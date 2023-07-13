@@ -1,1 +1,0 @@
-Project for Sistemi Orientati ad Internet at @UniPR.
