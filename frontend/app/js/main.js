@@ -28,6 +28,7 @@
     components.forEach(c => c.destroy());
     await root.appendChild(elem);
     components.push(comp);
+
   }
 
   // initializes the components

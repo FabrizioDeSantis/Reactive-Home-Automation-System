@@ -15,7 +15,8 @@ import compression from 'compression';
 import opts from './options.js';
 import {routes} from './routes.js';
 import {OIDCMiddleware} from './openid.js';
-
+import {WebSocketServer} from 'ws';
+import {WebSocket} from 'ws';
 /**
  * Initializes the application middlewares.
  *
@@ -62,27 +63,70 @@ function fallbacks(app) {
     });
 }
 
+/**
+ * Initializes the WebSocket server.
+ * @param {Server} server HTTP server
+ * @param {{iface: string, port: number}} config Configuration options
+ * @return {WebSocketServer} A WebSocket server
+ */
+function initWss(server, config) {
+    // configuration taken from: https://www.npmjs.com/package/ws#websocket-compression
+    const perMessageDeflate = {
+      zlibDeflateOptions: {
+        chunkSize: 1024,
+        memLevel: 7,
+        level: 3
+      },
+      zlibInflateOptions: {
+        chunkSize: 10 * 1024
+      },
+      clientNoContextTakeover: true, // Defaults to negotiated value
+      serverNoContextTakeover: true, // Defaults to negotiated value
+      serverMaxWindowBits: 10, // Defaults to negotiated value
+      concurrencyLimit: 10, // Limits zlib concurrency for perf
+      threshold: 1024 // Size (in bytes) below which messages should not be compressed if context takeover is disabled
+    };
+  
+    const opts = {server, perMessageDeflate};
+    return new WebSocketServer(opts);
+  }
+
 async function run() {
     // creates the configuration options and the logger
     const options = opts();
     console.debug('🔧 Configuration', options);
 
+    console.debug(`🔧 Initializing Express...`);
+    const app = express();
+    init(app);
+
     console.debug(`🔧 Initializing OpenID Connect...`);
     const oidc = new OIDCMiddleware(options.config.oidc);
     await oidc.init();
 
-    console.debug(`🔧 Initializing routes...`);
-    const app = express();
-    init(app);
-    routes(app, oidc, options.config);
-    fallbacks(app);
-
     const {iface, port} = options.config;
-    app.listen(port, iface, () => {
+    const server = app.listen(port, iface, () => {
         // noinspection HttpUrlsUsage
         console.info(`🏁 Server listening: http://${iface}:${port}`);
     });
+
+    console.debug(`🔧 Initializing WSS...`);
+    const wss = initWss(server, options.config);
+
+    console.debug(`🔧 Initializing routes...`);
+    routes(app, wss, oidc, options.config);
+    fallbacks(app);
+
+    const temperatureGeneratorWS = new WebSocket('ws://10.88.0.31:8081');
+    // temperatureGeneratorWS.onopen = () => {
+    //   temperatureGeneratorWS.send(JSON.stringify({"type": "subscribe", "target": "temperature"}));
+    // };
+
 }
 
 // noinspection JSIgnoredPromiseFromCall
-run();
+run().then(() => {
+  console.info('🏃 Application up and running');
+}).catch(err => {
+  console.error('💩 Oh shit...', err);
+});

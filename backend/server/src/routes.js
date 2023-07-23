@@ -63,9 +63,10 @@ function isInteger(n) {
  * Initializes routes.
  * @param {Express} app Express application
  * @param {OIDCMiddleware} oidc OpenID Connect middleware
+ * @param {WebSocketServer} wss WebSocket server
  * @param {{iface: string, port: number, auth: boolean, oidc: {redirect: string, clientId: string, secret: string}}} config Configuration options
  */
-export function routes(app, oidc, config) {
+export function routes(app, wss, oidc, config) {
     const authenticate = config.auth ? (req, res, next) => oidc.validate(req, res, next) : (_req, _res, next) => next();
 
     app.get('/login', (req, resp) => {
