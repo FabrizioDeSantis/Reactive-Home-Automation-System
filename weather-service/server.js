@@ -8,6 +8,7 @@ import methodOverride from 'method-override';
 import bodyParser from 'body-parser';
 import compression from 'compression';
 import {WebSocketServer} from 'ws';
+import {WebSocket} from 'ws';
 
 // own modules
 import opts from './options.js';

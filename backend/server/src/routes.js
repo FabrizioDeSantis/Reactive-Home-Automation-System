@@ -69,6 +69,14 @@ function isInteger(n) {
 export function routes(app, wss, oidc, config) {
     const authenticate = config.auth ? (req, res, next) => oidc.validate(req, res, next) : (_req, _res, next) => next();
 
+    wss.on('connection', (ws) => {
+        console.log("Client connesso");
+        temperatureGeneratorWS.onmessage = (event) => {
+          const obj = JSON.parse(event.data);
+          ws.send(obj.value);
+        };
+      });
+
     app.get('/login', (req, resp) => {
         oidc.login(req, resp);
     });

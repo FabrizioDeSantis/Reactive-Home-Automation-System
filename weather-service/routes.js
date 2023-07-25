@@ -2,6 +2,7 @@
 
 import {WeatherHandler} from './weather-handler.js';
 import {v4 as uuid} from 'uuid';
+import {WebSocket} from 'ws';
 
 /**
  * Registers a new handler for the WS channel.
