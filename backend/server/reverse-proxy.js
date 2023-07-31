@@ -5,7 +5,8 @@ const http = require('http'),
 // Set up proxy rules instance
 const proxyRules = new HttpProxyRules({
     rules: {
-        '/api/(.*)': 'http://localhost:8000/$1'
+        '/api/(.*)': 'http://localhost:8000/$1',
+        '/ws/(.*)': 'http://localhost:8000/$1'
     },
     default: 'http://localhost:8080' // default target
 });

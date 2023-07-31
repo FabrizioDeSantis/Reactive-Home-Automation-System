@@ -1,6 +1,6 @@
 'use strict';
 
-import {WindowHandler} from './window-handler.js';
+import {DoorHandler} from './door-handler.js';
 import { WebSocket } from 'ws';
 import {v4 as uuid} from 'uuid';
 
@@ -13,31 +13,31 @@ function sequencer() {
   }
 }
 
-export class Window {
-  constructor(windowId, state) {
-      this._windowId = windowId;
+export class Door {
+  constructor(doorId, state) {
+      this._doorId = doorId;
       this._state = state;
   }
 
   //@formatter:off
-  get windowId() { return this._windowId; }
+  get doorId() { return this._doorId; }
   get state() { return this._state; }
   set state(state) { this._state = state; }
   //@formatter:on
 }
 
 const seq = sequencer();
-const windows = [];
+const doors = [];
 
 for (let i = 0; i < 2; i++) {
   const id = seq();
-  windows.push(new Window(id, `CLOSED`));
+  doors.push(new Door(id, `closed`));
 }
 
-function toDTO(window) {
+function toDTO(door) {
   return {
-      windowId: window.windowId,
-      state: window.state,
+      doorId: door.doorId,
+      state: door.state,
   };
 }
 
@@ -105,8 +105,8 @@ export function routes(app, config) {
   ws.on("open", () => {
     console.info("Connesso al backend");
     try {
-      ws.send(JSON.stringify({"type": "subscribe", "source": "window"}));
-      const handler = new WindowHandler(ws, config, `window:${uuid()}`);
+      ws.send(JSON.stringify({"type": "subscribe", "source": "door"}));
+      const handler = new DoorHandler(ws, config, `door:${uuid()}`);
       registerHandler(ws, handler);
     } catch (e) {
       console.error('💥 Failed to register WS handler, closing connection', e);

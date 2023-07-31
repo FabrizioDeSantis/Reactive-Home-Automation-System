@@ -18,6 +18,7 @@ services:
       app-network:
         #bind to apache proxy pass
         ipv4_address: "10.88.0.11"
+    hostname: backend
   # Weather
   weather:
     build: ./weather-service
@@ -26,6 +27,14 @@ services:
     networks:
       app-network:
         ipv4_address: "10.88.0.31"
+  # Window
+  window:
+    build: ./window-service
+    ports:
+      - 8082:8082
+    networks:
+      app-network:
+        ipv4_address: "10.88.0.41"
 
 networks:
   app-network:    

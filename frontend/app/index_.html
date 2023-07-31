@@ -56,6 +56,15 @@
   </div>
 </script>
 
+<script type = "text/javascript">
+  const ws = new WebSocket("ws://desantis-invitto.soi2223.unipr.it/ws");
+  ws.onmessage = (event) => {
+      console.log(event);
+      document.getElementById("temperature-weather").innerHTML = Math.round(event.data) + "°C";
+      console.log(event.data);
+  };
+</script>
+
 <script type="text/html" id="tasks-template">
   <!-- Panels -->
   <div class="panel">

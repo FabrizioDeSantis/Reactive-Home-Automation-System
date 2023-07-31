@@ -64,7 +64,7 @@
   class RestClient {
     /**
      * Instances a new `RestClient`.
-     * @param baseUrl {string?} Optional baseUrl
+     * @param baseUrl {string?} Optional baseUrl (in questo caso è /api)
      */
     constructor(baseUrl) {
       this._baseUrl = baseUrl;

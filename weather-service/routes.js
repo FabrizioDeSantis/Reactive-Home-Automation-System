@@ -1,9 +1,8 @@
 'use strict';
 
 import {WeatherHandler} from './weather-handler.js';
+import {WebSocket} from "ws";
 import {v4 as uuid} from 'uuid';
-import {WebSocket} from 'ws';
-
 /**
  * Registers a new handler for the WS channel.
  * @param ws {WebSocket} The WebSocket client
@@ -60,18 +59,25 @@ function registerHandler(ws, handler) {
 /**
  * Initializes routes.
  * @param {Express} app Express application
- * @param {WebSocketServer} wss WebSocket server
+ * @param {WebSocket} ws WebSocket server
  * @param {{iface: string, port: number}} config Configuration options
  */
-export function routes(app, wss, config) {
-
-  wss.on('connection', ws => {
+export function routes(app, config) {
+  const ws = new WebSocket("ws://backend:8000");
+  ws.on("open", () => {
+    console.info("Connesso al backend");
     try {
+      ws.send(JSON.stringify({"type": "subscribe", "source": "temperature"}));
       const handler = new WeatherHandler(ws, config, `weather:${uuid()}`);
       registerHandler(ws, handler);
     } catch (e) {
       console.error('💥 Failed to register WS handler, closing connection', e);
       ws.close();
     }
+  });
+  ws.on("close", () => {
+    setTimeout(function(){
+      ws = new WebSocket("ws://backend:8000");
+    }, 1000);
   });
 }

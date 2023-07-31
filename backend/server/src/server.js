@@ -116,12 +116,6 @@ async function run() {
     console.debug(`🔧 Initializing routes...`);
     routes(app, wss, oidc, options.config);
     fallbacks(app);
-
-    const temperatureGeneratorWS = new WebSocket('ws://10.88.0.31:8081');
-    temperatureGeneratorWS.onopen = () => {
-      temperatureGeneratorWS.send(JSON.stringify({"type": "subscribe", "target": "temperature"}));
-    };
-    
 }
 
 // noinspection JSIgnoredPromiseFromCall

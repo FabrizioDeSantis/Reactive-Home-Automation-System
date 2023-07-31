@@ -26,10 +26,7 @@
                         <div class="middle">
                             <div class="left">
                                 <h3>Weather</h3>
-                                <h1 id="temperature-weather">33 °C</h1>
-                                <script type = "text/javascript">
-                                    console.log("Frontend eseguito");
-                                </script>
+                                <h1 id="temperature-weather">-- °C</h1>
                             </div>
                         </div>
                         <small class="text-muted">Today</small>
@@ -39,7 +36,7 @@
                         <div class="middle">
                             <div class="left">
                                 <h3>Room Temperature</h3>
-                                <h1>22 °C</h1>
+                                <h1>-- °C</h1>
                             </div>
                         </div>
                         <small class="text-muted">Today</small>
@@ -49,7 +46,7 @@
                         <div class="middle">
                             <div class="left">
                                 <h3>Heat pump</h3>
-                                <h1>33 °C</h1>
+                                <h1>-- °C</h1>
                             </div>
                             <div class="progress">
                                 <svg>
@@ -88,7 +85,7 @@
                                     <circle cx="38" cy="38" r="36"></circle>
                                 </svg>
                                 <div class="number">
-                                    <p>closed</p>
+                                    <p id="window-1">--</p>
                                 </div>
                             </div>
                         </div>
@@ -124,12 +121,6 @@
                         <span class="material-symbols-outlined">dark_mode</span>
                     </div>
                     <div class="profile">
-                        <!--
-                        <div class="info">
-                            <p>Hey, Fabrizio</p>
-                            <small class="text-muted">Admin</small>
-                        </div>
-                    -->
                         <div id="customBtn" class="customGPlusSignIn">
                             <!-- <span class="icon"></span> -->
                             <span class="buttonText">Sign in with Google</span>
@@ -138,16 +129,82 @@
                 </div>
                 <div class="panelcontrol">
                     <h2>Control Panel</h2>
-                    <div class="controls">
-                        <h2>Door</h2>
-                        <h2>Windows</h2>
-                        <h2>Heat pump</h2>
+                    <div class="control heat">
+                        <div class="icon">
+                            <span class="material-symbols-outlined">heat_pump_balance</span>
+                        </div>
+                        <div class="right">
+                            <div class="info">
+                                <h2>Heat pump</h2>
+                                <h3>On/Off</h3>
+                                <div class="div-buttons">
+                                    <div id="buttonOn" class="customButton">
+                                        <!-- <span class="icon"></span> -->
+                                        <span class="buttonText">On</span>
+                                    </div>
+                                    <div id="buttonOff" class="customButton">
+                                        <!-- <span class="icon"></span> -->
+                                        <span class="buttonText">Off</span>
+                                    </div>
+                                </div>
+                                <h3>Temperature</h3>
+                                <div class="div-buttons">
+                                    <div id="buttonSetTemperature" class="customButton">
+                                        <!-- <span class="icon"></span> -->
+                                        <span class="buttonText">Set</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control door">
+                        <div class="icon">
+                            <span class="material-symbols-outlined">door_front</span>
+                        </div>
+                        <div class="right">
+                            <div class="info">
+                                <h2>Door</h2>
+                                <h3>Open/Close</h3>
+                                <div class="div-buttons">
+                                    <div id="buttonOn" class="customButton">
+                                        <!-- <span class="icon"></span> -->
+                                        <span class="buttonText">Open</span>
+                                    </div>
+                                    <div id="buttonOff" class="customButton">
+                                        <!-- <span class="icon"></span> -->
+                                        <span class="buttonText">Close</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control windows">
+                        <div class="icon">
+                            <span class="material-symbols-outlined">home</span>
+                        </div>
+                        <div class="right">
+                            <div class="info">
+                                <h2>Windows</h2>
+                                <h3>Open/Close</h3>
+                                <div class="div-buttons">
+                                    <div id="buttonOn" class="customButton">
+                                        <!-- <span class="icon"></span> -->
+                                        <span class="buttonText">Open</span>
+                                    </div>
+                                    <div id="buttonOff" class="customButton">
+                                        <!-- <span class="icon"></span> -->
+                                        <span class="buttonText">Close</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
+    
+    <script src="js/wsocket-client.js"></script>
     <script src="js/login.component.js"></script>
     <script src="./js/index.js"></script>
 </body>

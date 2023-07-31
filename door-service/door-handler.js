@@ -20,7 +20,7 @@ class ValidationError extends Error {
 /**
  * A WebSocket handler to deal with window's state subscriptions.
  */
-export class WindowHandler extends EventEmitter {
+export class DoorHandler extends EventEmitter {
   #ws;
   #config;
   #name;
@@ -94,7 +94,7 @@ export class WindowHandler extends EventEmitter {
     if (json.type !== 'subscribe' && json.type !== 'unsubscribe') {
       throw new ValidationError('Invalid message type');
     }
-    if (json.target !== 'windows') {
+    if (json.target !== 'doors') {
       throw new ValidationError('Invalid subscription target');
     }
     return json;
@@ -115,7 +115,7 @@ export class WindowHandler extends EventEmitter {
  */
   _sendState(){
     const state = "open";
-    const msg = {type: 'windows', dateTime: DateTime.now().toISO(), state};
+    const msg = {type: 'doors', dateTime: DateTime.now().toISO(), state};
 
     // message is always appended to the buffer
     this.#buffer.push(msg);

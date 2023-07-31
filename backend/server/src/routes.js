@@ -1,5 +1,7 @@
 'use strict';
 
+import {WebSocket} from 'ws';
+
 function sequencer() {
     let i = 1;
     return function () {
@@ -24,8 +26,58 @@ class Task {
     //@formatter:on
 }
 
+class Window {
+    constructor(windowId, state) {
+        this._windowId = windowId;
+        this._state = state;
+    }
+  
+    //@formatter:off
+    get windowId() { return this._windowId; }
+    get state() { return this._state; }
+    set state(state) { this._state = state; }
+    //@formatter:on
+}
+
+class Door {
+    constructor(state) {
+        this._state = state;
+    }
+
+    //@formatter:off
+    get state() { return this._state; }
+    set state(state) { this._state = state; }
+    //@formatter:on
+}
+
+class HeatPump {
+    constructor(state, temperatureOp) {
+        this._state = state;
+        this._temperatureOp = temperatureOp;
+    }
+
+    //@formatter:off
+    get state() { return this._state; }
+    get temperatureOp() {return this._temperatureOp; }
+    set state(state) { this._state = state; }
+    set temperatureOp(temperatureOp) { this._temperatureOp = temperatureOp; }
+    //@formatter:on
+}
+
+class Thermometer {
+    constructor(temperature) {
+        this._temperature = temperature;
+    }
+
+    //@formatter:off
+    get temperature() { return this._temperature; }
+    set temperature(temperature) { this._temperature = temperature; }
+    //@formatter:on
+}
+
 const seq = sequencer();
 const tasks = [];
+const clients = new Map();
 
 for (let i = 0; i < 5; i++) {
     const id = seq();
@@ -68,14 +120,54 @@ function isInteger(n) {
  */
 export function routes(app, wss, oidc, config) {
     const authenticate = config.auth ? (req, res, next) => oidc.validate(req, res, next) : (_req, _res, next) => next();
-
+    
     wss.on('connection', (ws) => {
-        console.log("Client connesso");
-        temperatureGeneratorWS.onmessage = (event) => {
-          const obj = JSON.parse(event.data);
-          ws.send(obj.value);
-        };
+      console.log("Client connesso");
+      //ws.send(JSON.stringify({"type": "subscribe", "target": "temperature"}));
+      // type, source/target
+      //console.info(ws);
+      ws.on('message', (message) => {
+        try {
+          const data = JSON.parse(message);
+          if(data.type == "subscribe" && data.source == "temperature"){
+            // gestire casistica di iscrizione microservizio temperatura
+            console.info("weather service iscritto");
+            clients.set(ws, "temperature");
+            ws.send(JSON.stringify({"type": "subscribe", "target": "temperature"}));
+          }
+          else if(data.type == "subscribe" && data.source == "client"){
+            // gestire casistica client
+            console.info("frontend connesso");
+            clients.set(ws, "client");
+          }
+          else if(data.type == "subscribe" && data.source == "window") {
+            // gestire casistica windows
+            console.info("windows service connesso");
+            clients.set(ws, "window");
+            ws.send(JSON.stringify({"type": "subscribe", "target": "state"}));
+          }
+          if(data.type == "temperature") {
+            // arrivo nuova temperatura
+            console.info(data.value);
+            for (let [keyWS, value] of clients) {
+                if(value == "client"){
+                    keyWS.send(JSON.stringify({"type": "temperature", "value": data.value}));
+                }
+            }
+          }
+          else if(data.type == "windows") {
+            // arrivo nuova temperatura
+            for (let [keyWS, value] of clients) {
+                if(value == "client"){
+                    keyWS.send(JSON.stringify({"type": "windows", "value": data.state}));
+                }
+            }
+          }
+        } catch (error) {
+          console.error('Errore durante l\'elaborazione del messaggio:', error);
+        }
       });
+    });
 
     app.get('/login', (req, resp) => {
         oidc.login(req, resp);
