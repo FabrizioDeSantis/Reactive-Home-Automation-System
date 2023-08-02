@@ -161,13 +161,13 @@ export function routes(app, wss, oidc, config) {
                         break;
 
                     case "heatpump":
-                        console.info("HeatPump service connected");
+                        console.info("🔥 HeatPump microservice connected");
                         clients.set(ws, "heatpump");
                         ws.send(JSON.stringify({"type": "subscribe", "target": "heatpump"}));
                         break;
 
                     case "thermometer":
-                        console.info("🌡️Thermometer service connected");
+                        console.info("🌡️ Thermometer microservice connected");
                         clients.set(ws, "thermometer");
                         ws.send(JSON.stringify({"type": "subscribe", "target": "thermometer"}));
                         break;
@@ -188,16 +188,20 @@ export function routes(app, wss, oidc, config) {
             case "windows":
                 const windowsStates = data.states.map((window) => window.state);
                 const windowsIds = data.states.map((window) => window.windowId);
+
                 if(windows.length != windowsStates.length){
                     for (let i = 0; i < (windowsStates.length - windows.length); i++) {
                         windows.push(new Window(null, windowsStates[i]));
                     }
                 }
+
                 for (let i = 0; i < windows.length; i++) {
                     windows[i].windowId = windowsIds[i];
                     windows[i].state = windowsStates[i];
                 }
+
                 services.set("windows", windows);
+
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
                         keyWS.send(JSON.stringify({"type": "windows", "value": windowsStates}));
@@ -211,12 +215,15 @@ export function routes(app, wss, oidc, config) {
             case "doors":
                 const doorsStates = data.states.map((door) => door.state);
                 const doorIds = data.states.map((door) => door.doorId);
+
                 if(doors.length != doorsStates.length){
                     for (let i = 0; i < (doorsStates.length - doors.length); i++) {
                         doors.push(new Door(doorsStates[i]));
                     }
                 }
+
                 services.set("doors", doors);
+
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
                         keyWS.send(JSON.stringify({"type": "doors", "value": doorsStates}));
@@ -244,7 +251,7 @@ export function routes(app, wss, oidc, config) {
                 break;
           }
         } catch (error) {
-          console.error('Errore durante l\'elaborazione del messaggio:', error);
+          console.error('Error during processing of the message:', error);
         }
       });
     });

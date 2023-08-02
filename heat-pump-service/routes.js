@@ -111,7 +111,7 @@ export function routes(app, config) {
 
   const ws = new WebSocket("ws://backend:8000");
   ws.on("open", () => {
-    console.info("Connected to backend");
+    console.info("✅ Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "heatpump"}));
       const handler = new HeatPumpHandler(ws, config, `heatpump:${uuid()}`);

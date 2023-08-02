@@ -114,7 +114,7 @@ export function routes(app, config) {
 
   const ws = new WebSocket("ws://backend:8000");
   ws.on("open", () => {
-    console.info("Connected to backend");
+    console.info("✅ Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "window"}));
       const handler = new WindowHandler(ws, config, `window:${uuid()}`);

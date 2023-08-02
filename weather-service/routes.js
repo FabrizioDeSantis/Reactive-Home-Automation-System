@@ -65,7 +65,7 @@ function registerHandler(ws, handler) {
 export function routes(app, config) {
   const ws = new WebSocket("ws://backend:8000");
   ws.on("open", () => {
-    console.info("Connesso al backend");
+    console.info("✅ Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "temperature"}));
       const handler = new WeatherHandler(ws, config, `weather:${uuid()}`);
