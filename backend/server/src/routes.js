@@ -1,7 +1,5 @@
 'use strict';
 
-import {WebSocket} from 'ws';
-
 function sequencer() {
     let i = 1;
     return function () {
@@ -34,6 +32,7 @@ class Window {
   
     //@formatter:off
     get windowId() { return this._windowId; }
+    set windowId(windowId) { this._windowId = windowId; }
     get state() { return this._state; }
     set state(state) { this._state = state; }
     //@formatter:on
@@ -76,13 +75,16 @@ class Thermometer {
 }
 
 const seq = sequencer();
-const tasks = [];
+const services = new Map();
+const windows = [];
+const doors = [];
+const temperatures = [];
 const clients = new Map();
 
-for (let i = 0; i < 5; i++) {
-    const id = seq();
-    tasks.push(new Task(id, `Spend more time hacking #${id}`));
-}
+// for (let i = 0; i < 5; i++) {
+//     const id = seq();
+//     tasks.push(new Task(id, `Spend more time hacking #${id}`));
+// }
 
 function toDTO(task) {
     return {
@@ -129,39 +131,117 @@ export function routes(app, wss, oidc, config) {
       ws.on('message', (message) => {
         try {
           const data = JSON.parse(message);
-          if(data.type == "subscribe" && data.source == "temperature"){
-            // gestire casistica di iscrizione microservizio temperatura
-            console.info("weather service iscritto");
-            clients.set(ws, "temperature");
-            ws.send(JSON.stringify({"type": "subscribe", "target": "temperature"}));
-          }
-          else if(data.type == "subscribe" && data.source == "client"){
-            // gestire casistica client
-            console.info("frontend connesso");
-            clients.set(ws, "client");
-          }
-          else if(data.type == "subscribe" && data.source == "window") {
-            // gestire casistica windows
-            console.info("windows service connesso");
-            clients.set(ws, "window");
-            ws.send(JSON.stringify({"type": "subscribe", "target": "state"}));
-          }
-          if(data.type == "temperature") {
-            // arrivo nuova temperatura
-            console.info(data.value);
-            for (let [keyWS, value] of clients) {
-                if(value == "client"){
-                    keyWS.send(JSON.stringify({"type": "temperature", "value": data.value}));
+          switch(data.type){
+            case "subscribe":
+                switch(data.source){
+                    case "client":
+                        console.info("🙍🏻‍♂️ Frontend connected");
+                        clients.set(ws, "client");
+                        break;
+                    
+                    case "temperature":
+                        console.info("🌦️ Weather microservice connected");
+                        clients.set(ws, "temperature");
+                        clients.set("weather", null);
+                        ws.send(JSON.stringify({"type": "subscribe", "target": "temperature"}));
+                        break;
+    
+                    case "window":
+                        console.info("🪟 Windows microservice connected");
+                        clients.set(ws, "window");
+                        clients.set("windows", []);
+                        ws.send(JSON.stringify({"type": "subscribe", "target": "windows"}));
+                        break;
+                    
+                    case "door":
+                        console.info("🚪 Doors microservice connected");
+                        clients.set(ws, "door");
+                        clients.set("doors", []);
+                        ws.send(JSON.stringify({"type": "subscribe", "target": "doors"}));
+                        break;
+
+                    case "heatpump":
+                        console.info("HeatPump service connected");
+                        clients.set(ws, "heatpump");
+                        ws.send(JSON.stringify({"type": "subscribe", "target": "heatpump"}));
+                        break;
+
+                    case "thermometer":
+                        console.info("🌡️Thermometer service connected");
+                        clients.set(ws, "thermometer");
+                        ws.send(JSON.stringify({"type": "subscribe", "target": "thermometer"}));
+                        break;
                 }
-            }
-          }
-          else if(data.type == "windows") {
-            // arrivo nuova temperatura
-            for (let [keyWS, value] of clients) {
-                if(value == "client"){
-                    keyWS.send(JSON.stringify({"type": "windows", "value": data.state}));
+                break;
+
+            case "temperature":
+                console.info("New temperature received from the weather microservice: " + data.value);
+                temperatures.push(data.value);
+                services.set("weather", data.value);
+                for (let [keyWS, value] of clients) {
+                    if(value == "client"){
+                        keyWS.send(JSON.stringify({"type": "temperature", "value": data.value}));
+                    }
                 }
-            }
+                break;
+
+            case "windows":
+                const windowsStates = data.states.map((window) => window.state);
+                const windowsIds = data.states.map((window) => window.windowId);
+                if(windows.length != windowsStates.length){
+                    for (let i = 0; i < (windowsStates.length - windows.length); i++) {
+                        windows.push(new Window(null, windowsStates[i]));
+                    }
+                }
+                for (let i = 0; i < windows.length; i++) {
+                    windows[i].windowId = windowsIds[i];
+                    windows[i].state = windowsStates[i];
+                }
+                services.set("windows", windows);
+                for (let [keyWS, value] of clients) {
+                    if(value == "client"){
+                        keyWS.send(JSON.stringify({"type": "windows", "value": windowsStates}));
+                    }
+                    if(value == "thermometer"){
+                        keyWS.send(JSON.stringify({"type": "services", "value": Object.fromEntries(services)}));
+                    }
+                } 
+                break;
+            
+            case "doors":
+                const doorsStates = data.states.map((door) => door.state);
+                const doorIds = data.states.map((door) => door.doorId);
+                if(doors.length != doorsStates.length){
+                    for (let i = 0; i < (doorsStates.length - doors.length); i++) {
+                        doors.push(new Door(doorsStates[i]));
+                    }
+                }
+                services.set("doors", doors);
+                for (let [keyWS, value] of clients) {
+                    if(value == "client"){
+                        keyWS.send(JSON.stringify({"type": "doors", "value": doorsStates}));
+                    }
+                    if(value == "thermometer"){
+                        keyWS.send(JSON.stringify({"type": "services", "value": Object.fromEntries(services)}));
+                    }
+                }
+                break;
+            
+            case "heatpump":
+                for (let [keyWS, value] of clients) {
+                    if(value == "client"){
+                        keyWS.send(JSON.stringify({"type": "heatpump", "value": data.state}));
+                    }
+                }
+                break;
+            
+            case "thermometer":
+                for (let [keyWS, value] of clients) {
+                    if(value == "client"){
+                        keyWS.send(JSON.stringify({"type": "thermometer", "value": data.value}));
+                    }
+                }
+                break;
           }
         } catch (error) {
           console.error('Errore durante l\'elaborazione del messaggio:', error);

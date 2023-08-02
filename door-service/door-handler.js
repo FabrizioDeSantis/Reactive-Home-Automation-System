@@ -3,6 +3,7 @@
 import {DateTime} from 'luxon';
 import {anIntegerWithPrecision} from './random.js';
 import {EventEmitter} from 'events';
+import { retrieveStates } from './routes.js';
 
 class ValidationError extends Error {
   #message;
@@ -114,8 +115,8 @@ export class DoorHandler extends EventEmitter {
  * @private
  */
   _sendState(){
-    const state = "open";
-    const msg = {type: 'doors', dateTime: DateTime.now().toISO(), state};
+    const states = retrieveStates();
+    const msg = {type: 'doors', dateTime: DateTime.now().toISO(), states};
 
     // message is always appended to the buffer
     this.#buffer.push(msg);

@@ -29,16 +29,26 @@ export class Door {
 const seq = sequencer();
 const doors = [];
 
-for (let i = 0; i < 2; i++) {
-  const id = seq();
-  doors.push(new Door(id, `closed`));
-}
+const id = seq();
+doors.push(new Door(id, `closed`));
+
 
 function toDTO(door) {
   return {
       doorId: door.doorId,
       state: door.state,
   };
+}
+
+export function retrieveStates() {
+  const statesList = [];
+
+  for (const door of doors) {
+    const doorState = toDTO(door);
+    statesList.push(doorState);
+  }
+
+  return statesList;
 }
 
 /**

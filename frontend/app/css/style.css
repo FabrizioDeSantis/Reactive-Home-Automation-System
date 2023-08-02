@@ -13,6 +13,8 @@
     --color-primary-variant: #111e88;
     --color-dark-variant: #677483;
     --color-background: #f6f6f9;
+    
+    --color-disabled: #e6e6e6;
 
     --card-border-radius: 2rem;
     --border-radius-1: 0.4rem;
@@ -33,6 +35,15 @@
     --color-dark-variant: #a3bdcc;
     --color-light: rgba(0, 0, 0, 0.44);
     --box-shadow: 0 2rem 3rem var(--color-light);
+}
+
+.disable-theme-var {
+    --color-background: var(--color-disabled);
+    --color-white: var(--color-disabled);
+    --color-primary: var(--color-info-dark);
+    --color-danger: var(--color-info-dark);
+    --color-success: var(--color-info-dark);
+    --color-warning: var(--color-info-dark);
 }
 
 * {
@@ -270,6 +281,34 @@ main .graphs a {
     display: block;
     margin: 1rem auto;
     color: var(--color-primary);
+}
+
+.container .graphs > div {
+    background: var(--color-white);
+    padding: var(--card-padding);
+    border-radius: var(--card-border-radius);
+    margin-top: 1rem;
+    width: 100%;
+    box-shadow: var(--box-shadow);
+    transition: all 300ms ease;
+}
+
+main .graphs > div:hover {
+    box-shadow: none;
+}
+
+.container .graphs .canvas .control_prev{
+    float: left;
+    border-radius: 50%;
+    align-items: center;
+    background: none;
+}
+
+.container .graphs .canvas .control_next{
+    float: right;
+    border-radius: 50%;
+    align-items: center;
+    background: none;
 }
 
 /* RIGHT */

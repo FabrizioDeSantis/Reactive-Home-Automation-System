@@ -35,6 +35,30 @@ services:
     networks:
       app-network:
         ipv4_address: "10.88.0.41"
+  # Door
+  door:
+    build: ./door-service
+    ports:
+      - 8083:8083
+    networks:
+      app-network:
+        ipv4_address: "10.88.0.51"
+  # Heat Pump
+  heat-pump:
+    build: ./heat-pump-service
+    ports:
+      - 8084:8084
+    networks:
+      app-network:
+        ipv4_address: "10.88.0.61"
+  # Thermometer
+  thermometer:
+    build: ./thermometer-service
+    ports:
+      - 8085:8085
+    networks:
+      app-network:
+        ipv4_address: "10.88.0.71"
 
 networks:
   app-network:    

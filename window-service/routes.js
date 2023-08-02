@@ -31,7 +31,7 @@ const windows = [];
 
 for (let i = 0; i < 2; i++) {
   const id = seq();
-  windows.push(new Window(id, `CLOSED`));
+  windows.push(new Window(id, `closed`));
 }
 
 function toDTO(window) {
@@ -39,6 +39,17 @@ function toDTO(window) {
       windowId: window.windowId,
       state: window.state,
   };
+}
+
+export function retrieveStates() {
+  const statesList = [];
+
+  for (const window of windows) {
+    const windowState = toDTO(window);
+    statesList.push(windowState);
+  }
+
+  return statesList;
 }
 
 /**
@@ -103,7 +114,7 @@ export function routes(app, config) {
 
   const ws = new WebSocket("ws://backend:8000");
   ws.on("open", () => {
-    console.info("Connesso al backend");
+    console.info("Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "window"}));
       const handler = new WindowHandler(ws, config, `window:${uuid()}`);

@@ -4,4 +4,4 @@ RUN npm install
 RUN npm install ws
 RUN npm install wscat
 CMD ["npm", "start"] 
-EXPOSE 8082
+EXPOSE 8083
