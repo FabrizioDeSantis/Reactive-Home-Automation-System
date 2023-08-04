@@ -112,7 +112,7 @@
                 <div class="graphs">
                     <h2>History</h2>
                     <div class="canvas">
-                        <button class="prevBtn" type="button"><span class="material-symbols-outlined">chevron_left</span></button>
+                        <button class="control_prev" type="button"><span class="material-symbols-outlined">chevron_left</span></button>
                         <button class="control_next" type="button"><span class="material-symbols-outlined">chevron_right</span></button>
                         <canvas id="acquisitions"></canvas>
                     </div>
@@ -123,17 +123,19 @@
         </div>
         <div class="container-right">
             <div class="right">
-                <div class="top">
+                <div class="top" id="prova">
                     <div class="theme-toggler">
                         <span class="material-symbols-outlined active">light_mode</span>
                         <span class="material-symbols-outlined">dark_mode</span>
                     </div>
-                    <div class="profile">
-                        <div id="customBtn" class="customGPlusSignIn">
-                            <!-- <span class="icon"></span> -->
-                            <span class="buttonText">Sign in with Google</span>
+                    <script type="text/html" id="login-template">
+                        <div class="profile">
+                            <div id="login-button" class="customGPlusSignIn">
+                                <!-- <span class="icon"></span> -->
+                                <span class="buttonText">Sign in with Google</span>
+                            </div>
                         </div>
-                    </div>
+                    </script>
                 </div>
                 <div class="panelcontrol">
                     <h2>Control Panel</h2>
@@ -165,7 +167,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="control door">
+                    <div class="control door" id="control-door">
                         <div class="icon">
                             <span class="material-symbols-outlined">door_front</span>
                         </div>
@@ -186,23 +188,25 @@
                             </div>
                         </div>
                     </div>
-                    <div class="control windows">
+                    <div class="control windows" id="control-windows">
                         <div class="icon">
                             <span class="material-symbols-outlined">home</span>
                         </div>
                         <div class="right">
-                            <div class="info">
+                            <div class="info" id="info">
                                 <h2>Windows</h2>
-                                <h3>Open/Close</h3>
-                                <div class="div-buttons">
-                                    <div id="buttonOn" class="customButton">
-                                        <!-- <span class="icon"></span> -->
-                                        <span class="buttonText">Open</span>
-                                    </div>
-                                    <div id="buttonOff" class="customButton">
-                                        <!-- <span class="icon"></span> -->
-                                        <span class="buttonText">Close</span>
-                                    </div>
+                                <div class>
+                                        <script type="text/html" id="windows-template">
+                                            <h3>Open/Close</h3>
+                                            <div class="div-buttons" id="div-buttons-windows">
+                                                <div id="buttonOn" class="customButton">
+                                                    <span class="buttonText">Open</span>
+                                                </div>
+                                                <div id="buttonOff" class="customButton">
+                                                    <span class="buttonText">Close</span>
+                                                </div>
+                                            </div>
+                                        </script>
                                 </div>
                             </div>
                         </div>
@@ -212,8 +216,22 @@
         </div>
     </div>
     
+    <script src="js/index.js"></script>
     <script src="js/wsocket-client.js"></script>
+    <script src="js/vendor/modernizr-3.11.2.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/commons.js"></script>
+    <script src="js/rest-client.js"></script>
+    <script src="js/models.js"></script>
+    <script src="js/models-door.js"></script>
+    <script src="js/models-window.js"></script>
     <script src="js/login.component.js"></script>
-    <script src="./js/index.js"></script>
+    <script src="js/task.component.js"></script>
+    <script src="js/tasks.component.js"></script>
+    <script src="js/window.component.js"></script>
+    <script src="js/windows.component.js"></script>
+    <script src="js/door.component.js"></script>
+    <script src="js/main.js"></script>
+    
 </body>
 </html>

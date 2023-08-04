@@ -129,4 +129,10 @@ export function routes(app, config) {
     }, 1000);
   });
 
+  app.put('/door', (req, resp) => {
+    const {state} = req.body;
+    console.info("Command to change the door state in " + state);
+    doors[0].state = state;
+  });
+
 }

@@ -36,10 +36,10 @@
      */
     async init() {
       this.#element = document.createElement('div');
-      this.#element.className = 'tasks';
+      this.#element.className = 'profile';
       this.#element.innerHTML = document.querySelector('script#login-template').textContent;
 
-      const btn = this.#element.querySelector('button');
+      const btn = this.#element.querySelector('#login-button');
       const hdlr = new Handler('click', btn, () => this.login());
       this.#handlers.push(hdlr);
 

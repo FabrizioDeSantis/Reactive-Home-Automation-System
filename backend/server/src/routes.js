@@ -1,4 +1,5 @@
-'use strict';
+'use strict'
+import fetch from 'node-fetch';
 
 function sequencer() {
     let i = 1;
@@ -86,11 +87,10 @@ const clients = new Map();
 //     tasks.push(new Task(id, `Spend more time hacking #${id}`));
 // }
 
-function toDTO(task) {
+function toDTO(window) {
     return {
-        id: task.id,
-        description: task.description,
-        timestamp: task.timestamp // should be converted according to ISO8601
+        id: window.windowId,
+        state: window.state
     };
 }
 
@@ -113,6 +113,24 @@ function isInteger(n) {
     return false;
 }
 
+async function makeRequest(type, url, data) {
+    try {
+      const response = await fetch(url, {
+        method: type,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+  
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error:', error);
+      return { error: 'Something went wrong' };
+    }
+  }
+
 /**
  * Initializes routes.
  * @param {Express} app Express application
@@ -122,7 +140,6 @@ function isInteger(n) {
  */
 export function routes(app, wss, oidc, config) {
     const authenticate = config.auth ? (req, res, next) => oidc.validate(req, res, next) : (_req, _res, next) => next();
-    
     wss.on('connection', (ws) => {
       console.log("Client connesso");
       //ws.send(JSON.stringify({"type": "subscribe", "target": "temperature"}));
@@ -181,6 +198,7 @@ export function routes(app, wss, oidc, config) {
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
                         keyWS.send(JSON.stringify({"type": "temperature", "value": data.value}));
+                        keyWS.send(JSON.stringify({"type": "temperatures", "value": temperatures}));
                     }
                 }
                 break;
@@ -220,6 +238,10 @@ export function routes(app, wss, oidc, config) {
                     for (let i = 0; i < (doorsStates.length - doors.length); i++) {
                         doors.push(new Door(doorsStates[i]));
                     }
+                }
+
+                for (let i = 0; i < doors.length; i++) {
+                    doors[i].state = doorsStates[i];
                 }
 
                 services.set("doors", doors);
@@ -265,14 +287,51 @@ export function routes(app, wss, oidc, config) {
         oidc.tokens(req, resp);
     });
 
-    app.get('/tasks', authenticate, (req, resp) => {
-        console.debug('Retrieving all tasks', {principal: req.principal.email});
+    // app.get('/tasks', authenticate, (req, resp) => {
+    //     console.debug('Retrieving all tasks', {principal: req.principal.email});
 
-        const objects = tasks.map(toDTO);
+    //     const objects = tasks.map(toDTO);
+    //     resp.json({
+    //         total: objects.length,
+    //         results: objects
+    //     });
+    // });
+
+    app.get("/windows", (req, resp) => {
+        const objects = windows.map(toDTO);
         resp.json({
             total: objects.length,
             results: objects
         });
+    });
+
+    app.put('/window/:id', (req, resp) => {
+        const {state} = req.body;
+        const idRaw = req.params.id;
+        console.debug('Attempting to update window', {id: idRaw, state});
+
+        if (!isInteger(idRaw)) {
+            resp.status(400);
+            resp.json({error: 'Invalid window identifier'});
+            return;
+        }
+        const id = parseInt(idRaw, 10);
+        const window = windows.find(t => t.windowId === id);
+        if (!window) {
+            resp.status(404);
+            resp.json({error: 'Window not found'});
+            return;
+        }
+        let dto = {state: state, actual: window.state};
+        makeRequest('PUT', `http://actuator:8086/window/${encodeURIComponent(id)}`, dto).then((response) => {
+            console.info('Response from actuator:', response);
+            resp.status(304);
+            resp.json({error: "Status not changed"});
+        });
+        window.state = state;
+        console.info('Window successfully updated', {window});
+
+        //resp.json(toDTO(window));
     });
 
     app.post('/task', authenticate, (req, resp) => {
@@ -331,6 +390,17 @@ export function routes(app, wss, oidc, config) {
         console.info('Task successfully updated', {task, principal: req.principal.email});
 
         resp.json(toDTO(task));
+    });
+
+    app.put('/door', (req, resp) => {
+        const {state} = req.body;
+        let dto = {state: state, actual: doors[0].state};
+        console.debug('Attempting to change door state', {state: state});
+        makeRequest('PUT', "http://actuator:8086/door", dto).then((response) => {
+            console.info('Response from actuator:', response);
+            resp.status(304);
+            resp.json({error: "Status not changed"});
+        });
     });
 
     app.delete('/task/:id', authenticate, (req, resp) => {

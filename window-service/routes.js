@@ -41,6 +41,21 @@ function toDTO(window) {
   };
 }
 
+function isInteger(n) {
+  if (typeof n === 'number') {
+      return true;
+  }
+  if (typeof n === 'string') {
+      try {
+          parseInt(n, 10);
+          return true;
+      } catch (_) {
+          return false;
+      }
+  }
+  return false;
+}
+
 export function retrieveStates() {
   const statesList = [];
 
@@ -128,6 +143,22 @@ export function routes(app, config) {
     setTimeout(function(){
       ws = new WebSocket("ws://backend:8000");
     }, 1000);
+  });
+
+  app.put('/window/:id', (req, resp) => {
+    const {state} = req.body;
+    const idRaw = req.params.id;
+    console.debug('Attempting to update window', {id: idRaw, state});
+
+    if (!isInteger(idRaw)) {
+      resp.status(400);
+      resp.json({error: 'Invalid window identifier'});
+      return;
+    }
+
+    const id = parseInt(idRaw, 10);
+    const window = windows.find(t => t.windowId === id);
+    window.state = state;
   });
 
 }

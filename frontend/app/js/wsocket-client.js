@@ -11,6 +11,10 @@ ws.onmessage = (event) => {
             document.getElementById("temperature-weather").innerHTML = data.value.toFixed(1) + "°C";
             break;
 
+        case "temperatures":
+            //console.log(data.value);
+            break;
+
         case "windows":
             const windowsStates = data.value;
 

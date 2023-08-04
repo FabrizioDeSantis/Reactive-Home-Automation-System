@@ -16,7 +16,6 @@ import opts from './options.js';
 import {routes} from './routes.js';
 import {OIDCMiddleware} from './openid.js';
 import {WebSocketServer} from 'ws';
-import {WebSocket} from 'ws';
 /**
  * Initializes the application middlewares.
  *
@@ -93,6 +92,7 @@ function initWss(server, config) {
 
 async function run() {
     // creates the configuration options and the logger
+    //const client = new RestClient('http://actuator:8086');
     const options = opts();
     console.debug('🔧 Configuration', options);
 

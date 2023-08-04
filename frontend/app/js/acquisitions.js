@@ -91,6 +91,10 @@ function showNextChart() {
 //     chart.update();
 }
 
+export function updateChart(newData) {
+    
+}
+
 chart = new Chart(ctx, charData[currentChartIndex]);
 $(document).ready(function() {
     $("button.control_prev").on("click", function(e) {
