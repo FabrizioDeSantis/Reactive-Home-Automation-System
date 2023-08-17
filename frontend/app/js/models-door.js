@@ -5,15 +5,17 @@
    * Representation of a door.
    */
   class DoorModel {
+    #id;
     #state;
 
-    constructor(state) {
+    constructor(id, state) {
+      this.#id = id;
       this.#state = state;
     }
 
     //@formatter:off
-    // get id() { return this.#id; }
-    // set id(id) { this.#id = id; }
+    get id() { return this.#id; }
+    set id(id) { this.#id = id; }
     get state() { return this.#state; }
     set state(state) { this.#state = state; }
     //@formatter:on
@@ -28,36 +30,37 @@
 
     /**
      * Instances a new `RestTaskModel`.
+     * @param id {int} A id
      * @param state {string} A description
      * @param client {RestClient} A rest client
      */
-    constructor(state, client) {
-      super(state);
+    constructor(id, state, client) {
+      super(id, state);
       this.#client = client;
     }
 
     toDto() {
       // return {id: this.id, description: this.description, timestamp: this.timestamp};
-      return {state: this.state};
+      return {id: this.id, state: this.state};
     }
 
     async create() {
       let dto = this.toDto();
       dto = await this.#client.post('door', dto);
-      // this.id = dto.id;
+      console.log(dto);
+      this.id = dto.id;
       return this;
     }
 
     async delete() {
-      // await this.#client.del(`door/${encodeURIComponent(this.id)}`);
-      await this.#client.del(`door`);
+      await this.#client.del(`door/${encodeURIComponent(this.id)}`);
       return this;
     }
 
     async update(newState) {
       let dto = {state: newState};
-      // await this.#client.put(`task/${encodeURIComponent(this.id)}`, dto);
-      await this.#client.put(`door`, dto);
+      console.log("Changing Door " + this.id + " to " + newState);
+      await this.#client.put(`door/${encodeURIComponent(this.id)}`, dto);
       this.state = newState;
       return this;
     }

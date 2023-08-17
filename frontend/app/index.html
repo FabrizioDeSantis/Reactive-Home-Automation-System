@@ -14,6 +14,16 @@
     <!-- STYLESHEET -->
 </head>
 <body>
+    <section>
+        <div class="modal-box">
+            <span class="material-symbols-outlined">error</span>
+            <h2>Error</h2>
+            <h3 id="error-message">Operation not permitted</h3>
+            <div class="buttons">
+                <button class="close-btn">Ok</button>
+            </div>
+        </div>
+    </section>
     <div class="container-main">
         <div class="container">
             <main>
@@ -21,7 +31,7 @@
                 <div class="date">
                     <input type="date">
                 </div>
-                <div class="insights">
+                <div class="insights" id="insights">
                     <div class="weather">
                         <span class="material-symbols-outlined">partly_cloudy_day</span>
                         <div class="middle">
@@ -42,71 +52,61 @@
                         </div>
                         <small class="text-muted">Today</small>
                     </div>
-                    <div class="heatpump">
-                        <span class="material-symbols-outlined">heat_pump_balance</span>
-                        <div class="middle">
-                            <div class="left">
-                                <h3>Heat pump</h3>
-                                <h1 id="temperature-heatpump">-- °C</h1>
-                            </div>
-                            <div class="progress">
-                                <svg>
-                                    <circle cx="38" cy="38" r="36"></circle>
-                                </svg>
-                                <div class="number">
-                                    <p id="heatpump">--</p>
+                    <script type="text/html" id="heatpump-template">
+                        <div class="heatpump">
+                            <span class="material-symbols-outlined">heat_pump_balance</span>
+                            <div class="middle">
+                                <div class="left">
+                                    <h3>Heat pump</h3>
+                                    <h1 id="temperature-heatpump">-- °C</h1>
+                                </div>
+                                <div class="progress">
+                                    <svg>
+                                        <circle cx="38" cy="38" r="36"></circle>
+                                    </svg>
+                                    <div class="number">
+                                        <p id="heatpump">--</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="door1">
-                        <span class="material-symbols-outlined">door_front</span>
-                        <div class="middle">
-                            <div class="left">
-                                <h3>Door</h3>
-                            </div>
-                            <div class="progress">
-                                <svg>
-                                    <circle cx="38" cy="38" r="36"></circle>
-                                </svg>
-                                <div class="number">
-                                    <p id="door-1">--</p>
+                    </script>
+                    <script type="text/html" id="doors-template">
+                        <div class="door">
+                            <span class="material-symbols-outlined">door_front</span>
+                            <div class="middle">
+                                <div class="left">
+                                    <h3 id="door-header">Doors</h3>
+                                </div>
+                                <div class="progress">
+                                    <svg>
+                                        <circle cx="38" cy="38" r="36"></circle>
+                                    </svg>
+                                    <div class="number">
+                                        <p id="door">--</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="window1">
-                        <span class="material-symbols-outlined">home</span>
-                        <div class="middle">
-                            <div class="left">
-                                <h3>Windows 1</h3>
-                            </div>
-                            <div class="progress">
-                                <svg>
-                                    <circle cx="38" cy="38" r="36"></circle>
-                                </svg>
-                                <div class="number">
-                                    <p id="window-1">--</p>
+                    </script>
+                    <script type="text/html" id="windows-template">
+                        <div class="window">
+                            <span class="material-symbols-outlined">home</span>
+                            <div class="middle">
+                                <div class="left">
+                                    <h3 id="window-header">Windows</h3>
+                                </div>
+                                <div class="progress">
+                                    <svg>
+                                        <circle cx="38" cy="38" r="36"></circle>
+                                    </svg>
+                                    <div class="number">
+                                        <p id="window">--</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="window2">
-                        <span class="material-symbols-outlined">home</span>
-                        <div class="middle">
-                            <div class="left">
-                                <h3>Windows 2</h3>
-                            </div>
-                            <div class="progress">
-                                <svg>
-                                    <circle cx="38" cy="38" r="36"></circle>
-                                </svg>
-                                <div class="number">
-                                    <p id="window-2">--</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                     </script>
                 </div>
                 <!-- END OF INSIGHTS -->
                 <div class="graphs">
@@ -131,7 +131,6 @@
                     <script type="text/html" id="login-template">
                         <div class="profile">
                             <div id="login-button" class="customGPlusSignIn">
-                                <!-- <span class="icon"></span> -->
                                 <span class="buttonText">Sign in with Google</span>
                             </div>
                         </div>
@@ -144,25 +143,29 @@
                             <span class="material-symbols-outlined">heat_pump_balance</span>
                         </div>
                         <div class="right">
-                            <div class="info">
+                            <div class="info" id="info-pump">
                                 <h2>Heat pump</h2>
-                                <h3>On/Off</h3>
-                                <div class="div-buttons">
-                                    <div id="buttonOn" class="customButton">
-                                        <!-- <span class="icon"></span> -->
-                                        <span class="buttonText">On</span>
-                                    </div>
-                                    <div id="buttonOff" class="customButton">
-                                        <!-- <span class="icon"></span> -->
-                                        <span class="buttonText">Off</span>
-                                    </div>
-                                </div>
-                                <h3>Temperature</h3>
-                                <div class="div-buttons">
-                                    <div id="buttonSetTemperature" class="customButton">
-                                        <!-- <span class="icon"></span> -->
-                                        <span class="buttonText">Set</span>
-                                    </div>
+                                <div class>
+                                    <script type="text/html" id="heatpump-control-template">
+                                        <h3>On/Off</h3>
+                                        <div class="div-buttons">
+                                            <div id="buttonOn" class="customButton">
+                                                <span class="buttonText">On</span>
+                                            </div>
+                                            <div id="buttonOff" class="customButton">
+                                                <span class="buttonText">Off</span>
+                                            </div>
+                                        </div>
+                                        <h3>Temperature (°C)</h3>
+                                        <div class="div-buttons">
+                                            <div id="temp-input" class="customButton">
+                                                <input id="tempOp" type="text" placeholder="">
+                                            </div>
+                                            <div id="buttonSetTemperature" class="customButton">
+                                                <span class="buttonText">Set</span>
+                                            </div>
+                                        </div>
+                                    </script>
                                 </div>
                             </div>
                         </div>
@@ -172,18 +175,25 @@
                             <span class="material-symbols-outlined">door_front</span>
                         </div>
                         <div class="right">
-                            <div class="info">
-                                <h2>Door</h2>
-                                <h3>Open/Close</h3>
-                                <div class="div-buttons">
-                                    <div id="buttonOn" class="customButton">
-                                        <!-- <span class="icon"></span> -->
-                                        <span class="buttonText">Open</span>
+                            <div class="info" id="info-door">
+                                <h2>Doors</h2>
+                                <div class>
+                                    <div class="div-buttons" id="div-buttons-doors">
+                                        <div id="buttonNewDoor" class="customButton">
+                                            <span class="buttonText">Add door</span>
+                                        </div>
                                     </div>
-                                    <div id="buttonOff" class="customButton">
-                                        <!-- <span class="icon"></span> -->
-                                        <span class="buttonText">Close</span>
-                                    </div>
+                                    <script type="text/html" id="doors-control-template">
+                                        <h3 id="command-header">Open/Close</h3>
+                                        <div class="div-buttons" id="div-buttons-doors">
+                                            <div id="buttonOn" class="customButton">
+                                                <span class="buttonText">Open</span>
+                                            </div>
+                                            <div id="buttonOff" class="customButton">
+                                                <span class="buttonText">Close</span>
+                                            </div>
+                                        </div>
+                                    </script>
                                 </div>
                             </div>
                         </div>
@@ -196,17 +206,22 @@
                             <div class="info" id="info">
                                 <h2>Windows</h2>
                                 <div class>
-                                        <script type="text/html" id="windows-template">
-                                            <h3>Open/Close</h3>
-                                            <div class="div-buttons" id="div-buttons-windows">
-                                                <div id="buttonOn" class="customButton">
-                                                    <span class="buttonText">Open</span>
-                                                </div>
-                                                <div id="buttonOff" class="customButton">
-                                                    <span class="buttonText">Close</span>
-                                                </div>
-                                            </div>
-                                        </script>
+                                    <div class="div-buttons" id="div-buttons-doors">
+                                        <div id="buttonNewWindow" class="customButton">
+                                            <span class="buttonText">Add window</span>
+                                        </div>
+                                    </div>
+                                    <script type="text/html" id="windows-control-template">
+                                    <h3 id="command-header">Open/Close</h3>
+                                    <div class="div-buttons" id="div-buttons-windows">
+                                        <div id="buttonOn" class="customButton">
+                                            <span class="buttonText">Open</span>
+                                        </div>
+                                        <div id="buttonOff" class="customButton">
+                                            <span class="buttonText">Close</span>
+                                        </div>
+                                    </div>
+                                    </script>
                                 </div>
                             </div>
                         </div>
@@ -216,8 +231,7 @@
         </div>
     </div>
     
-    <script src="js/index.js"></script>
-    <script src="js/wsocket-client.js"></script>
+    <script type="module" src="js/index.js"></script>
     <script src="js/vendor/modernizr-3.11.2.min.js"></script>
     <script src="js/plugins.js"></script>
     <script src="js/commons.js"></script>
@@ -225,13 +239,18 @@
     <script src="js/models.js"></script>
     <script src="js/models-door.js"></script>
     <script src="js/models-window.js"></script>
+    <script src="js/models-heatpump.js"></script>
     <script src="js/login.component.js"></script>
     <script src="js/task.component.js"></script>
     <script src="js/tasks.component.js"></script>
     <script src="js/window.component.js"></script>
     <script src="js/windows.component.js"></script>
     <script src="js/door.component.js"></script>
+    <script src="js/doors.component.js"></script>
+    <script src="js/heatpump.component.js"></script>
+    <script src="js/heatpumps.component.js"></script>
     <script src="js/main.js"></script>
+    <script type="module" src="js/wsocket-client.js"></script>
     
 </body>
 </html>

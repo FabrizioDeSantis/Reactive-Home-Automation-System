@@ -46,6 +46,33 @@
     --color-warning: var(--color-info-dark);
 }
 
+.enable-theme-var {
+    --color-primary: #7380ec;
+    --color-danger: #ff7782;
+    --color-success: #41f1b6;
+    --color-warning: #ffbb55;
+    --color-white: #fff;
+    --color-info-dark: #7d8da1;
+    --color-info-light: #dce1eb;
+    --color-dark: #363949;
+    --color-light: rgba(132, 139, 200, 0.18);
+    --color-primary-variant: #111e88;
+    --color-dark-variant: #677483;
+    --color-background: #f6f6f9;
+    
+    --color-disabled: #e6e6e6;
+
+    --card-border-radius: 2rem;
+    --border-radius-1: 0.4rem;
+    --border-radius-2: 0.8rem;
+    --border-radius-3: 1.2rem;
+
+    --card-padding: 1.8rem;
+    --padding-1: 1.2rem;
+
+    --box-shadow: 0 2rem 3rem var(--color-light);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -207,7 +234,75 @@ main .insights svg circle{
     stroke-dasharray: 250;
 }
 
-main .insights .windows1 svg circle{
+main .insights .windows svg circle{
+    fill: none;
+    stroke: var(--color-info-dark);
+    stroke-width: 10;
+    stroke-linecap: round;
+    transform: translate(8px, 5px);
+    stroke-dasharray: 250;
+}
+
+.modal-box {
+    position: absolute;
+    left: 50%;
+    top: 20%;
+    transform: translate(-50%, 50%);
+    box-shadow: var(--box-shadow);
+}
+
+.modal-box:hover {
+    box-shadow: none;
+}
+
+.modal-box{
+    display: flex;
+    max-width: 380px;
+    width: 100%;
+    border-radius: var(--card-border-radius);
+    background-color: white;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    padding: 30px 20px;
+    opacity: 0;
+    transition: all 0.2s ease;
+    transform: translate(-50%, 50%) scale(1.2);
+}
+
+section.active .modal-box {
+    opacity: 1;
+    position: absolute;
+    z-index: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 50%) scale(1.2);
+}
+
+.modal-box span {
+    font-size: 30px;
+    color: var(--color-danger);
+}
+
+.modal-box .buttons{
+    margin-top: 10px;
+}
+
+.modal-box button {
+    font-size: 14px;
+    padding: 5px 10px;
+    margin: 0 10px;
+    color: var(--color-white);
+    background: var(--color-primary-variant);
+    border-radius: var(--border-radius-1);
+    opacity: 70%;
+    box-shadow: var(--box-shadow);
+}
+
+.modal-box button:hover {
+    cursor: pointer;
+}
+
+/* main .insights .windows1 svg circle{
     fill: none;
     stroke: var(--color-info-dark);
     stroke-width: 10;
@@ -223,7 +318,7 @@ main .insights .windows2 svg circle{
     stroke-linecap: round;
     transform: translate(8px, 5px);
     stroke-dasharray: 250;
-}
+} */
 
 main .insights .progress .number {
     position: absolute;
@@ -447,7 +542,16 @@ div[id^='buttonOn'] {
     background: var(--color-success);
     color: #444;
     width: 190px;
-    border-radius: var(--card-border-radius);
+    border-radius: var(--border-radius-1);
+    white-space: nowrap;
+}
+
+div[id^='buttonNew'] {
+    display: inline-block;
+    background: var(--color-warning);
+    color: #444;
+    width: 190px;
+    border-radius: var(--border-radius-1);
     white-space: nowrap;
 }
 
@@ -456,7 +560,7 @@ div[id^='buttonOff'] {
     background: var(--color-danger);
     color: #444;
     width: 190px;
-    border-radius: var(--card-border-radius);
+    border-radius: var(--border-radius-1);
     white-space: nowrap;
 }
 
@@ -465,7 +569,7 @@ div[id^='buttonOff'] {
     background: var(--color-warning);
     color: #444;
     width: 190px;
-    border-radius: var(--card-border-radius);
+    border-radius: var(--border-radius-1);
     white-space: nowrap;
 }
 
@@ -477,9 +581,14 @@ div[id^='buttonOff']:hover {
     cursor: pointer;
 }
 
+div[id^='buttonNew']:hover {
+    cursor: pointer;
+}
+
 #buttonSetTemperature:hover {
     cursor: pointer;
 }
+
 
 .right span.buttonText {
     display: inline-block;
@@ -487,6 +596,20 @@ div[id^='buttonOff']:hover {
     text-align: center;
     font-size: px;
     font-weight: bold;
+    /* Use the Roboto font that is loaded in the <head> */
+    font-family: poppins, sans-serif;
+}
+
+.right input {
+    background: var(--color-background);
+    vertical-align: middle;
+    border: 1px solid var(--color-info-light);
+    font-size: px;
+    width: 100%;
+    border-radius: var(--border-radius-2);
+    text-align: center;
+    font-weight: bold;
+    color: var(--color-dark);
     /* Use the Roboto font that is loaded in the <head> */
     font-family: poppins, sans-serif;
 }

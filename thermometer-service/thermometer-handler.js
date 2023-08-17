@@ -4,6 +4,10 @@ import {DateTime} from 'luxon';
 import {anIntegerWithPrecision} from './random.js';
 import {EventEmitter} from 'events';
 import { retrieveState } from './routes.js';
+import { actualRoomTemperature } from './room-temperature.js';
+import { updateInfo } from './routes.js';
+import { retrieveInfo } from './routes.js';
+import { updateTemperature } from './routes.js';
 
 class ValidationError extends Error {
   #message;
@@ -117,8 +121,14 @@ export class ThermometerHandler extends EventEmitter {
  * Sends the window state message.
  * @private
  */
-  _sendState(){
-    const value = retrieveState();
+  _sendRoomTemperature(){
+    const currTemp = retrieveState();
+    const info = retrieveInfo();
+
+    const value = actualRoomTemperature(info, currTemp);
+    console.info("Value " + value);
+    updateTemperature(value);
+    
     const msg = {type: 'thermometer', dateTime: DateTime.now().toISO(), value};
 
     // message is always appended to the buffer
@@ -156,9 +166,9 @@ export class ThermometerHandler extends EventEmitter {
       return;
     }
 
-    console.debug('🪟 Subscribing to window state', {handler: this.#name});
+    console.debug('🌡️ Subscribing to room temperature', {handler: this.#name});
     const callback = () => {
-      this._sendState();
+      this._sendRoomTemperature();
       this.#timeout = setTimeout(callback, this._someMillis());
     };
     this.#timeout = setTimeout(callback, 0);
@@ -175,6 +185,9 @@ export class ThermometerHandler extends EventEmitter {
 
   _onUpdate(msg) {
     const json = JSON.parse(msg);
-    console.info(json.value);
+    const value = json.value;
+    console.info(value);
+
+    updateInfo(value);
   }
 }

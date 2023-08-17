@@ -58,6 +58,7 @@
     async update(newState) {
       let dto = {state: newState};
       console.log("Changing Windows " + this.id + " to " + newState);
+      console.log(`window/${encodeURIComponent(this.id)}`);
       await this.#client.put(`window/${encodeURIComponent(this.id)}`, dto);
       this.state = newState;
       return this;

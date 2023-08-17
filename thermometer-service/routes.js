@@ -29,21 +29,42 @@ export class Thermometer {
 const seq = sequencer();
 
 const id = seq();
-const thermometer = new Thermometer(id, 0);
+const thermometer = new Thermometer(id, 20);
+
+let sensorsInformation;
 
 function toDTO(thermometer) {
   return {
     thermometerId: thermometer.thermometerId,
-      temperature: thermometer.temperature
+    temperature: thermometer.temperature
   };
+}
+
+export function updateInfo(info){
+  const weatherValue = info.weather;
+  const windows = info.windows;
+  const doors = info.doors;
+  const heatpump = info.heatpump;
+
+  sensorsInformation = {weather: weatherValue, windows: windows, doors: doors, heatpump: heatpump};
 }
 
 export function retrieveState() {
 
-  const thermometerInformations = toDTO(thermometer);
-  return thermometerInformations.temperature;
+  const thermometerInformation = toDTO(thermometer);
+  return thermometerInformation.temperature;
 
 }
+
+export function retrieveInfo(){
+  return sensorsInformation;
+}
+
+export function updateTemperature(temp) {
+  thermometer.temperature = temp;
+}
+
+
 
 /**
  * Registers a new handler for the WS channel.
@@ -97,7 +118,6 @@ function registerHandler(ws, handler) {
   // starts the handler
   handler.start();
 }
-
 /**
  * Initializes routes.
  * @param {Express} app Express application
@@ -106,6 +126,7 @@ function registerHandler(ws, handler) {
 export function routes(app, config) {
 
   const ws = new WebSocket("ws://backend:8000");
+
   ws.on("open", () => {
     console.info("✅ Connected to backend");
     try {
@@ -117,6 +138,7 @@ export function routes(app, config) {
       ws.close();
     }
   });
+  
   ws.on("close", () => {
     setTimeout(function(){
       ws = new WebSocket("ws://backend:8000");

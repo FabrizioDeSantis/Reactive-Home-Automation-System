@@ -71,11 +71,17 @@ async function run() {
   const app = express();
   init(app);
 
-  await sleep(3000);
+  await sleep(5000);
 
   console.debug(`🔧 Initializing routes...`);
   routes(app, options.config);
   fallbacks(app);
+
+  const {iface, port} = options.config;
+  app.listen(port, iface, () => {
+    // noinspection HttpUrlsUsage
+    console.info(`🏁 Server listening: http://${iface}:${port}`);
+  });
 }
 
 run().then(() => {

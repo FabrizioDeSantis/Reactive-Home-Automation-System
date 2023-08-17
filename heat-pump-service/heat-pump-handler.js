@@ -112,11 +112,10 @@ export class HeatPumpHandler extends EventEmitter {
 
 /**
  * Sends the window state message.
- * @private
  */
   _sendState(){
-    const state = retrieveState();
-    const msg = {type: 'heatpump', dateTime: DateTime.now().toISO(), state};
+    const value = retrieveState();
+    const msg = {type: 'heatpump', dateTime: DateTime.now().toISO(), value};
 
     // message is always appended to the buffer
     this.#buffer.push(msg);
@@ -153,7 +152,7 @@ export class HeatPumpHandler extends EventEmitter {
       return;
     }
 
-    console.debug('🪟 Subscribing to window state', {handler: this.#name});
+    console.debug('🔥 Subscribing to heatpump state', {handler: this.#name});
     const callback = () => {
       this._sendState();
       this.#timeout = setTimeout(callback, this._someMillis());

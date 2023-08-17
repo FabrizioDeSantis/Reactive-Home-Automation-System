@@ -25,7 +25,7 @@ export class DoorHandler extends EventEmitter {
   #ws;
   #config;
   #name;
-  #timeout;
+  //#timeout;
   #buffer;
   #death;
 
@@ -69,12 +69,12 @@ export class DoorHandler extends EventEmitter {
   }
 
   stop() {
-    if (this.#timeout) {
-      clearTimeout(this.#timeout);
-    }
-    if (this.#death) {
-      clearTimeout(this.#death);
-    }
+    // if (this.#timeout) {
+    //   clearTimeout(this.#timeout);
+    // }
+    // if (this.#death) {
+    //   clearTimeout(this.#death);
+    // }
   }
 
   start() {
@@ -112,7 +112,6 @@ export class DoorHandler extends EventEmitter {
 
 /**
  * Sends the window state message.
- * @private
  */
   _sendState(){
     const states = retrieveStates();
@@ -123,7 +122,7 @@ export class DoorHandler extends EventEmitter {
 
     // messages are dispatched immediately if delays are disabled or a random number is
     // generated greater than `delayProb` messages
-    if (!this.#config.delays || Math.random() > this.#config.delayProb) {
+    if (!this.#config.delays) {
       for (const bMsg of this.#buffer) {
         this._send(bMsg);
       }
@@ -143,30 +142,29 @@ export class DoorHandler extends EventEmitter {
       console.info('🐛 There\'s a bug preventing the message to be sent', {handler: this.#name});
       return;
     }
-
     console.debug('💬 Dispatching message', {handler: this.#name});
     this.#ws.send(JSON.stringify(msg));
   }
 
   _onSubscribe() {
-    if (this.#timeout) {
-      return;
-    }
-
+    // if (this.#timeout) {
+    //   return;
+    // }
     console.debug('🌡  Subscribing to window state', {handler: this.#name});
-    const callback = () => {
-      this._sendState();
-      this.#timeout = setTimeout(callback, this._someMillis());
-    };
-    this.#timeout = setTimeout(callback, 0);
+    this._sendState();
+    // const callback = () => {
+    //   this._sendState();
+    //   this.#timeout = setTimeout(callback, this._someMillis());
+    // };
+    // this.#timeout = setTimeout(callback, 0);
   }
 
   _onUnsubscribe() {
-    if (!this.#timeout) {
-      return;
-    }
-    clearTimeout(this.#timeout);
-    this.#timeout = 0;
+    // if (!this.#timeout) {
+    //   return;
+    // }
+    // clearTimeout(this.#timeout);
+    // this.#timeout = 0;
     this._send({ack: true});
   }
 }

@@ -40,11 +40,14 @@ class Window {
 }
 
 class Door {
-    constructor(state) {
+    constructor(doorId, state) {
+        this._doorId = doorId;
         this._state = state;
     }
 
     //@formatter:off
+    get doorId() { return this._doorId; }
+    set doorId(doorId) { this._doorId = doorId; }
     get state() { return this._state; }
     set state(state) { this._state = state; }
     //@formatter:on
@@ -81,16 +84,24 @@ const windows = [];
 const doors = [];
 const temperatures = [];
 const clients = new Map();
+let heatPump = null;
 
 // for (let i = 0; i < 5; i++) {
 //     const id = seq();
 //     tasks.push(new Task(id, `Spend more time hacking #${id}`));
 // }
 
-function toDTO(window) {
+function toDTOWindow(window) {
     return {
         id: window.windowId,
         state: window.state
+    };
+}
+
+function toDTODoor(doors) {
+    return {
+        id: doors.doorId,
+        state: doors.state
     };
 }
 
@@ -122,14 +133,28 @@ async function makeRequest(type, url, data) {
         },
         body: JSON.stringify(data),
       });
-  
-      const result = await response.json();
+      const result = await response;
       return result;
     } catch (error) {
       console.error('Error:', error);
       return { error: 'Something went wrong' };
     }
-  }
+}
+
+function sendAllData(){
+    const windowsStates = windows.map((window) => window.state);
+    const doorsStates = doors.map((door) => door.state);
+
+    for (let [keyWS, value] of clients) {
+        if(value == "client"){
+            console.log("Sending all data to frontend");
+
+            keyWS.send(JSON.stringify({"type": "windows", "value": windowsStates}));
+            keyWS.send(JSON.stringify({"type": "temperature", "value": temperatures[temperatures.length-1]}));
+            keyWS.send(JSON.stringify({"type": "doors", "value": doorsStates}));
+        }
+    } 
+}
 
 /**
  * Initializes routes.
@@ -154,6 +179,7 @@ export function routes(app, wss, oidc, config) {
                     case "client":
                         console.info("🙍🏻‍♂️ Frontend connected");
                         clients.set(ws, "client");
+                        sendAllData();
                         break;
                     
                     case "temperature":
@@ -180,12 +206,14 @@ export function routes(app, wss, oidc, config) {
                     case "heatpump":
                         console.info("🔥 HeatPump microservice connected");
                         clients.set(ws, "heatpump");
+                        clients.set("heatpump", null);
                         ws.send(JSON.stringify({"type": "subscribe", "target": "heatpump"}));
                         break;
 
                     case "thermometer":
                         console.info("🌡️ Thermometer microservice connected");
                         clients.set(ws, "thermometer");
+                        ws.send(JSON.stringify({"type": "services", "value": Object.fromEntries(services)}));
                         ws.send(JSON.stringify({"type": "subscribe", "target": "thermometer"}));
                         break;
                 }
@@ -206,9 +234,16 @@ export function routes(app, wss, oidc, config) {
             case "windows":
                 const windowsStates = data.states.map((window) => window.state);
                 const windowsIds = data.states.map((window) => window.windowId);
+                const numWindows = windowsStates.length - windows.length;
+
+                // if(windows.length != windowsStates.length){
+                //     for (let i = 0; i < numWindows; i++) {
+                //         windows.push(new Window( windowsIds[i], windowsStates[i]));
+                //     }
+                // }
 
                 if(windows.length != windowsStates.length){
-                    for (let i = 0; i < (windowsStates.length - windows.length); i++) {
+                    for (let i = 0; i < numWindows; i++) {
                         windows.push(new Window(null, windowsStates[i]));
                     }
                 }
@@ -236,11 +271,12 @@ export function routes(app, wss, oidc, config) {
 
                 if(doors.length != doorsStates.length){
                     for (let i = 0; i < (doorsStates.length - doors.length); i++) {
-                        doors.push(new Door(doorsStates[i]));
+                        doors.push(new Door(null, doorsStates[i]));
                     }
                 }
 
                 for (let i = 0; i < doors.length; i++) {
+                    doors[i].doorId = doorIds[i];
                     doors[i].state = doorsStates[i];
                 }
 
@@ -257,9 +293,24 @@ export function routes(app, wss, oidc, config) {
                 break;
             
             case "heatpump":
+                const state = data.value.state;
+                const temperatureOp = parseInt(data.value.temperatureOp, 10);
+                console.info(data);
+
+                if(heatPump === null){
+                    heatPump = new HeatPump(state, temperatureOp);
+                }
+                else{
+                    heatPump.state = state;
+                    heatPump.temperatureOp = temperatureOp;
+                }
+                services.set("heatpump", heatPump);
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
-                        keyWS.send(JSON.stringify({"type": "heatpump", "value": data.state}));
+                        keyWS.send(JSON.stringify({"type": "heatpump", "value": data.value}));
+                    }
+                    if(value == "thermometer"){
+                        keyWS.send(JSON.stringify({"type": "services", "value": Object.fromEntries(services)}));
                     }
                 }
                 break;
@@ -287,23 +338,74 @@ export function routes(app, wss, oidc, config) {
         oidc.tokens(req, resp);
     });
 
-    // app.get('/tasks', authenticate, (req, resp) => {
-    //     console.debug('Retrieving all tasks', {principal: req.principal.email});
-
-    //     const objects = tasks.map(toDTO);
-    //     resp.json({
-    //         total: objects.length,
-    //         results: objects
-    //     });
-    // });
-
     app.get("/windows", (req, resp) => {
-        const objects = windows.map(toDTO);
+        const objects = windows.map(toDTOWindow);
         resp.json({
             total: objects.length,
             results: objects
         });
     });
+
+    app.get("/doors", (req, resp) => {
+        const objects = doors.map(toDTODoor);
+        resp.json({
+            total: objects.length,
+            results: objects
+        });
+    });
+
+    app.get("/heatpump", (req, resp) => {
+        const object = heatPump;
+        resp.json({
+            result: object
+        });
+    });
+
+    app.put('/heatpump/state', (req, resp) => {
+        const {state} = req.body;
+
+        console.debug('Attempting to change heatpump state to ' + state);
+
+        let dto = {state: state, actual: heatPump.state};
+
+        makeRequest('PUT', `http://actuator:8086/heatpump/state`, dto).then((response) => {
+            console.log('Response from actuator:', response);
+            if(response.status === 400){
+                resp.status(400);
+                resp.json({error: "State not changed"});
+                console.info("Heatpump state not updated");
+            }
+            else {
+                resp.status(200);
+                resp.json({result: "Success"});
+                heatPump.state = state;
+                console.info('Heatpump state successfully updated: ', {heatPump});
+            }
+        });
+    });
+
+    app.put('/heatpump/temperatureOp', (req, resp) => {
+        const {temperatureOp} = req.body;
+
+        console.debug('Attempting to change heatpump operation temperature to ' + temperatureOp);
+
+        let dto = {state: heatPump.state, temperatureOp: temperatureOp};
+
+        makeRequest('PUT', `http://actuator:8086/heatpump/temperatureOp`, dto).then((response) => {
+            console.log('Response from actuator:', response);
+            if(response.status === 400){
+                resp.status(400);
+                resp.json({error: "Operation temperature not changed"});
+                console.info("Heatpump temperature not updated");
+            }
+            else {
+                resp.status(200);
+                resp.json({result: "Success"});
+                heatPump.temperatureOp = temperatureOp;
+                console.info('Heatpump temperature successfully updated: ', {heatPump});
+            }
+        });
+    })
 
     app.put('/window/:id', (req, resp) => {
         const {state} = req.body;
@@ -324,14 +426,55 @@ export function routes(app, wss, oidc, config) {
         }
         let dto = {state: state, actual: window.state};
         makeRequest('PUT', `http://actuator:8086/window/${encodeURIComponent(id)}`, dto).then((response) => {
-            console.info('Response from actuator:', response);
-            resp.status(304);
-            resp.json({error: "Status not changed"});
+            console.info('Response from actuator:', response.json());
+            if(response.status === 400){
+                resp.status(400);
+                resp.json({error: "Status not changed"});
+                return;
+            }
+            else {
+                resp.status(200);
+                resp.json({result: "Success"});
+                window.state = state;
+                console.info('Window successfully updated', {window});
+            }
         });
-        window.state = state;
-        console.info('Window successfully updated', {window});
+    });
 
-        //resp.json(toDTO(window));
+    app.post('/door', (req, resp) => {
+        const {state} = req.body;
+        console.log("Attempting to create a new door", {state: state});
+        let dto = {state: state};
+        makeRequest('POST', `http://actuator:8086/door`, dto).then((response) => {
+            console.info('Response from actuator:', response.json());
+            if(response.status === 400){
+                resp.status(400);
+                resp.json({error: "Door not added"});
+            }
+            else {
+                resp.status(201);
+                const door = new Door(doors.length, state);
+                resp.json(toDTODoor(door));
+            }
+        });
+    });
+
+    app.post('/window', (req, resp) => {
+        const {state} = req.body;
+        console.log("Attempting to create a new window", {state: state});
+        let dto = {state: state};
+        makeRequest('POST', `http://actuator:8086/window`, dto).then((response) => {
+            console.info('Response from actuator:', response.json());
+            if(response.status === 400){
+                resp.status(400);
+                resp.json({error: "Door not added"});
+            }
+            else {
+                resp.status(201);
+                const window = new Window(windows.length, state);
+                resp.json(toDTOWindow(window));
+            }
+        });
     });
 
     app.post('/task', authenticate, (req, resp) => {
@@ -392,15 +535,37 @@ export function routes(app, wss, oidc, config) {
         resp.json(toDTO(task));
     });
 
-    app.put('/door', (req, resp) => {
+    app.put('/door/:id', (req, resp) => {
         const {state} = req.body;
-        let dto = {state: state, actual: doors[0].state};
-        console.debug('Attempting to change door state', {state: state});
-        makeRequest('PUT', "http://actuator:8086/door", dto).then((response) => {
-            console.info('Response from actuator:', response);
-            resp.status(304);
-            resp.json({error: "Status not changed"});
+        const idRaw = req.params.id;
+        console.debug('Attempting to update door', {id: idRaw, state});
+
+        if (!isInteger(idRaw)) {
+            resp.status(400);
+            resp.json({error: 'Invalid door identifier'});
+            return;
+        }
+        const id = parseInt(idRaw, 10);
+        const door = doors.find(t => t.doorId === id);
+        if (!door) {
+            resp.status(404);
+            resp.json({error: 'Door not found'});
+            return;
+        }
+        let dto = {state: state, actual: door.state};
+        makeRequest('PUT', `http://actuator:8086/door/${encodeURIComponent(id)}`, dto).then((response) => {
+            console.log('Response from actuator:', response.json());
+            if(response.status === 400){
+                resp.status(400);
+                resp.json({error: "Status not changed"});
+            }
+            else {
+                resp.status(200);
+                resp.json({result: "Success"});
+            }
         });
+        door.state = state;
+        console.info('Door successfully updated', {door});
     });
 
     app.delete('/task/:id', authenticate, (req, resp) => {

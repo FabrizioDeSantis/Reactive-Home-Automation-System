@@ -5,18 +5,18 @@
      * @param el {HTMLElement} An HTML element representing a task
      * @return {number} The task's ID
      */
-    function taskIdOf(el) {
-      const idStr = el.id.substring(5 /*'task-'.length*/);
+    function windowIdOf(el) {
+      const idStr = el.id.substring(7 /*'task-'.length*/);
       return parseInt(idStr, 10);
     }
   
     /**
-     * A component that shows, adds and removes tasks.
+     * A component that shows, adds and removes windows.
      */
-    class DoorsComponent {
+    class HeatPumpsComponent {
       #element = null;
       #client = null;
-      #doors = [];
+      #heatpumps = [];
   
       /**
        * Instances this component.
@@ -39,20 +39,37 @@
        */
       async init() {
         this.#element = document.createElement('div');
-        let newBtn = document.getElementById("buttonNewDoor");
-        newBtn.addEventListener('click', ($event) => {
-          $event.preventDefault();
-          this.addDoor();
-        });
+        // this.#element.className = 'temp';
+        // this.#element.id = 'temp';
+        //this.#element.innerHTML = document.querySelector('script#windows-template').textContent;
+  
+        // const form = this.#element.querySelector('form[name="new-task"]');
+        // if (!form) {
+        //   toast('Cannot initialize components: no <b>form</b> found', 'error');
+  
+        // form.addEventListener('submit', ($event) => {
+        //   $event.preventDefault();
+        //   this.addTask(form);
+        //   form.reset();
+        // });
+  
+        // const a = this.#element.querySelector('a[data-action=complete-selected]');
+        // a.addEventListener('click', ($event) => {
+        //   $event.preventDefault();
+        //   this.removeSelectedTasks();
+        // });
   
         try {
-          const resp = await this.#client.get(`doors`);
-          resp.results.forEach(dto => {
-            const model = new RestDoorModel(dto.id, dto.state, this.#client);
-            this.createDoorComponent(model);
-          });
+          const resp = await this.#client.get(`heatpump`);
+
+          const model = new RestHeatPumpModel(resp.state, resp.temperatureOp, this.#client);
+          this.createHeatPumpComponent(model);
+          // resp.results.forEach(dto => {
+          //   const model = new RestWindowModel(dto.id, dto.state, this.#client);
+          //   this.createWindowComponent(model);
+          // });
         } catch (e) {
-          console.error('Something went wrong getting doors information', e);
+          console.error('Something went wrong getting heatpump', e);
         }
   
         return this.#element;
@@ -84,12 +101,13 @@
         tasks.forEach(this.removeTask.bind(this));
       }
   
-      createDoorComponent(model) {
+      createHeatPumpComponent(model) {
         const root = this.#element;
-        const component = new DoorComponent(model);
-        this.#doors.push({model, component});
+        const component = new HeatPumpComponent(model);
+        this.#heatpumps.push({model, component});
         const el = component.init();
         root.appendChild(el);
+        //component.on('completed', this.removeTask.bind(this));
       }
   
       async addTask(form) {
@@ -103,19 +121,10 @@
           this.createTaskComponent(model);
         }
       }
-
-      async addDoor() {
-        console.log("Adding new door ...");
-        console.log(this.#doors.length);
-        const model = new RestDoorModel(undefined, "closed", this.#client);
-        await model.create();
-        console.log("Door successfully saved", {model: model.toDto()});
-        this.createDoorComponent(model);
-      }
     }
   
     /* Exporting component */
-    win.DoorsComponent ||= DoorsComponent;
+    win.HeatPumpsComponent ||= HeatPumpsComponent;
   
   })(window);
   

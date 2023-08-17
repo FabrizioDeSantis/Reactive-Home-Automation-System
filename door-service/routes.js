@@ -51,6 +51,21 @@ export function retrieveStates() {
   return statesList;
 }
 
+function isInteger(n) {
+  if (typeof n === 'number') {
+      return true;
+  }
+  if (typeof n === 'string') {
+      try {
+          parseInt(n, 10);
+          return true;
+      } catch (_) {
+          return false;
+      }
+  }
+  return false;
+}
+
 /**
  * Registers a new handler for the WS channel.
  * @param ws {WebSocket} The WebSocket client
@@ -112,11 +127,12 @@ function registerHandler(ws, handler) {
 export function routes(app, config) {
 
   const ws = new WebSocket("ws://backend:8000");
+  let handler = null;
   ws.on("open", () => {
     console.info("✅ Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "door"}));
-      const handler = new DoorHandler(ws, config, `door:${uuid()}`);
+      handler = new DoorHandler(ws, config, `door:${uuid()}`);
       registerHandler(ws, handler);
     } catch (e) {
       console.error('💥 Failed to register WS handler, closing connection', e);
@@ -129,10 +145,32 @@ export function routes(app, config) {
     }, 1000);
   });
 
-  app.put('/door', (req, resp) => {
+  app.put('/door/:id', (req, resp) => {
     const {state} = req.body;
-    console.info("Command to change the door state in " + state);
-    doors[0].state = state;
+    const idRaw = req.params.id;
+    console.debug('Attempting to update door', {id: idRaw, state});
+
+    if (!isInteger(idRaw)) {
+      resp.status(400);
+      resp.json({error: 'Invalid door identifier'});
+      return;
+    }
+
+    const id = parseInt(idRaw, 10);
+    const door = doors.find(t => t.doorId === id);
+    door.state = state;
+    handler._sendState();
+    resp.status(200);
+    resp.json({result: "Success"});
+  });
+
+  app.post('/door', (req, resp) => {
+    const {state} = req.body;
+    const door = new Door(seq(), state);
+    doors.push(door);
+    handler._sendState();
+    resp.status(201);
+    resp.json({result: "Success"});
   });
 
 }

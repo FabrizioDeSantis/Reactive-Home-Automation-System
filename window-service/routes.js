@@ -128,11 +128,12 @@ function registerHandler(ws, handler) {
 export function routes(app, config) {
 
   const ws = new WebSocket("ws://backend:8000");
+  let handler = null;
   ws.on("open", () => {
     console.info("✅ Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "window"}));
-      const handler = new WindowHandler(ws, config, `window:${uuid()}`);
+      handler = new WindowHandler(ws, config, `window:${uuid()}`);
       registerHandler(ws, handler);
     } catch (e) {
       console.error('💥 Failed to register WS handler, closing connection', e);
@@ -159,6 +160,19 @@ export function routes(app, config) {
     const id = parseInt(idRaw, 10);
     const window = windows.find(t => t.windowId === id);
     window.state = state;
+    handler._sendState();
+    resp.status(200);
+    resp.json({result: 'Success'});
+  });
+
+  app.post('/window', (req, resp) => {
+    const {state} = req.body;
+    const window = new Window(seq(), state);
+    windows.push(window);
+    console.info(window);
+    handler._sendState();
+    resp.status(201);
+    resp.json({result: "Success"});
   });
 
 }

@@ -43,8 +43,24 @@
         this.#element = document.createElement("div");
         this.#element.className = "temp";
         this.#element.id = "temp";
-        this.#element.innerHTML = document.querySelector('script#windows-template').textContent;
-        //this.#element = document.getElementById("control-windows");
+        this.#element.innerHTML = document.querySelector('script#windows-control-template').textContent;
+        
+        let element2 = document.createElement("div");
+        element2.className = `window${this.#model.id}`;
+        element2.id = "window";
+        element2.innerHTML = document.querySelector('script#windows-template').textContent;
+        const stat = element2.querySelector("#window");
+        const h3 = element2.querySelector("#window-header");
+        stat.id = `window-${this.#model.id}`;
+        h3.innerHTML = `Window ${this.#model.id}`;
+        
+        const root = document.querySelector('#insights');
+        
+        root.appendChild(element2);
+
+        const windowNumber = this.#element.querySelector("#command-header");
+        windowNumber.innerHTML = `Window ${this.#model.id} - ${windowNumber.innerHTML}`;
+
         const openBtn = this.#element.querySelector("#buttonOn");
         openBtn.id = `buttonOn ${this.#model.id}`;
         const closeBtn = this.#element.querySelector("#buttonOff");
@@ -87,12 +103,26 @@
 
     async open() {
       console.debug("Attempting to open the door");
-      await this.#model.update("open");
+      try{
+        await this.#model.update("open");
+      }catch(e){
+        const section = document.querySelector("section");
+        const errorMessage = document.querySelector("#error-message");
+        section.classList.add("active");
+        errorMessage.innerHTML = "Error. Window already open";
+      }
     }
 
     async close() {
       console.debug("Attempting to close the door");
-      await this.#model.update("closed");
+      try{
+        await this.#model.update("closed");
+      } catch(e){
+        const section = document.querySelector("section");
+        const errorMessage = document.querySelector("#error-message");
+        section.classList.add("active");
+        errorMessage.innerHTML = "Error. Window already closed";
+      }
     }
 
     async save() {

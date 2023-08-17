@@ -14,14 +14,12 @@ function sequencer() {
 }
 
 export class HeatPump {
-  constructor(heatPumpId, state, temperatureOp) {
-      this._heatPumpId= heatPumpId;
+  constructor(state, temperatureOp) {
       this._state = state;
       this._temperatureOp = temperatureOp;
   }
 
   //@formatter:off
-  get heatPumpId() { return this._heatPumpId; }
   get state() { return this._state; }
   get temperatureOp() { return this._temperatureOp; }
   set state(state) { this._state = state; }
@@ -29,14 +27,10 @@ export class HeatPump {
   //@formatter:on
 }
 
-const seq = sequencer();
-
-const id = seq();
-const heatPump = new HeatPump(id, `off`, 30);
+const heatPump = new HeatPump("off", 0);
 
 function toDTO(heatPump) {
   return {
-      heatPumpId: heatPump.heatPumpId,
       state: heatPump.state,
       temperatureOp: heatPump.temperatureOp
   };
@@ -110,21 +104,48 @@ function registerHandler(ws, handler) {
 export function routes(app, config) {
 
   const ws = new WebSocket("ws://backend:8000");
+  let handler = null;
+
   ws.on("open", () => {
     console.info("✅ Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "heatpump"}));
-      const handler = new HeatPumpHandler(ws, config, `heatpump:${uuid()}`);
+      handler = new HeatPumpHandler(ws, config, `heatpump:${uuid()}`);
       registerHandler(ws, handler);
     } catch (e) {
       console.error('💥 Failed to register WS handler, closing connection', e);
       ws.close();
     }
   });
+
   ws.on("close", () => {
     setTimeout(function(){
       ws = new WebSocket("ws://backend:8000");
     }, 1000);
+  });
+
+  app.put('/heatpump/state', (req, resp) => {
+    const {state} = req.body;
+
+    console.debug('Attempting to change heatpump state to ' + state);
+
+    heatPump.state = state;
+    handler._sendState();
+
+    resp.status(200);
+    resp.json({result: 'Success'});
+  });
+
+  app.put('/heatpump/temperatureOp', (req, resp) => {
+    const {temperatureOp} = req.body;
+
+    console.debug('Attempting to change heatpump operation temperature to ' + temperatureOp);
+
+    heatPump.temperatureOp = temperatureOp;
+    handler._sendState();
+
+    resp.status(200);
+    resp.json({result: 'Success'});
   });
 
 }

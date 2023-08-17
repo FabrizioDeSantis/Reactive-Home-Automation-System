@@ -53,6 +53,7 @@ services:
     networks:
       app-network:
         ipv4_address: "10.88.0.61"
+    hostname: heatpump-service
   # Thermometer
   thermometer:
     build: ./thermometer-service

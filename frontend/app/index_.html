@@ -56,15 +56,6 @@
   </div>
 </script>
 
-<script type = "text/javascript">
-  const ws = new WebSocket("ws://desantis-invitto.soi2223.unipr.it/ws");
-  ws.onmessage = (event) => {
-      console.log(event);
-      document.getElementById("temperature-weather").innerHTML = Math.round(event.data) + "°C";
-      console.log(event.data);
-  };
-</script>
-
 <script type="text/html" id="tasks-template">
   <!-- Panels -->
   <div class="panel">
@@ -115,18 +106,6 @@
       <button name="cancel" class="warn"><i class="eos-icons">cancel</i></button>
     </div>
   </div>
-</script>
-
-<script>
-  console.log("Frontend eseguito");
-  const ws = new WebSocket("ws://10.88.0.11:8000");
-  ws.onopen = () => {
-      console.info("Connessione websocket stabilita con il server di backend");
-  }
-  ws.onmessage = (event) => {
-      const dataDisplay = document.getElementById("temperature-weather");
-      dataDisplay.innerHTML = event.data;
-  }
 </script>
 
 <script src="js/vendor/modernizr-3.11.2.min.js"></script>
