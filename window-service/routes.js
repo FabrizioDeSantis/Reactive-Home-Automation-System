@@ -28,6 +28,8 @@ export class Window {
 
 const seq = sequencer();
 const windows = [];
+const error_prob = 0.05;
+let handler = null;
 
 for (let i = 0; i < 2; i++) {
   const id = seq();
@@ -65,6 +67,14 @@ export function retrieveStates() {
   }
 
   return statesList;
+}
+
+export function simulateChanges(){
+  for(let window of windows) {
+    if(Math.random() < error_prob){
+      window.state = "error";
+    }
+  }
 }
 
 /**
@@ -127,8 +137,8 @@ function registerHandler(ws, handler) {
  */
 export function routes(app, config) {
 
-  const ws = new WebSocket("ws://backend:8000");
-  let handler = null;
+  let ws = new WebSocket("ws://backend:8000");
+
   ws.on("open", () => {
     console.info("✅ Connected to backend");
     try {
@@ -140,39 +150,55 @@ export function routes(app, config) {
       ws.close();
     }
   });
+
   ws.on("close", () => {
+
+  });
+
+  ws.on("error", () => {
     setTimeout(function(){
-      ws = new WebSocket("ws://backend:8000");
+      console.info("Connection to the backend refused. Reconnecting...");
+      routes(app, config);
     }, 1000);
   });
 
   app.put('/window/:id', (req, resp) => {
-    const {state} = req.body;
-    const idRaw = req.params.id;
-    console.debug('Attempting to update window', {id: idRaw, state});
-
-    if (!isInteger(idRaw)) {
-      resp.status(400);
-      resp.json({error: 'Invalid window identifier'});
-      return;
+    if(!handler.death){
+      const {state} = req.body;
+      const idRaw = req.params.id;
+      console.debug('Attempting to update window', {id: idRaw, state});
+  
+      if (!isInteger(idRaw)) {
+        resp.status(400);
+        resp.json({error: 'Invalid window identifier'});
+        return;
+      }
+  
+      const id = parseInt(idRaw, 10);
+      const window = windows.find(t => t.windowId === id);
+      window.state = state;
+      handler._sendState();
+      resp.status(200);
+      resp.json({result: 'Success'});
     }
-
-    const id = parseInt(idRaw, 10);
-    const window = windows.find(t => t.windowId === id);
-    window.state = state;
-    handler._sendState();
-    resp.status(200);
-    resp.json({result: 'Success'});
+    else{
+      console.info("Microservice is down");
+    }
   });
 
   app.post('/window', (req, resp) => {
-    const {state} = req.body;
-    const window = new Window(seq(), state);
-    windows.push(window);
-    console.info(window);
-    handler._sendState();
-    resp.status(201);
-    resp.json({result: "Success"});
+    if(!handler.death){
+      const {state} = req.body;
+      const window = new Window(seq(), state);
+      windows.push(window);
+      console.info(window);
+      handler._sendState();
+      resp.status(201);
+      resp.json({result: "Success"});
+    }
+    else{
+      console.info("Microservice is down");
+    }
   });
 
 }

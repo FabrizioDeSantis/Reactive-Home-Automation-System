@@ -28,6 +28,8 @@ export class Door {
 
 const seq = sequencer();
 const doors = [];
+const error_prob = 0.05;
+let handler = null;
 
 const id = seq();
 doors.push(new Door(id, `closed`));
@@ -49,6 +51,14 @@ export function retrieveStates() {
   }
 
   return statesList;
+}
+
+export function simulateChanges(){
+  for(let door of doors) {
+    if(Math.random() < error_prob){
+      door.state = "error";
+    }
+  }
 }
 
 function isInteger(n) {
@@ -126,8 +136,7 @@ function registerHandler(ws, handler) {
  */
 export function routes(app, config) {
 
-  const ws = new WebSocket("ws://backend:8000");
-  let handler = null;
+  let ws = new WebSocket("ws://backend:8000");
   ws.on("open", () => {
     console.info("✅ Connected to backend");
     try {
@@ -139,9 +148,15 @@ export function routes(app, config) {
       ws.close();
     }
   });
+
   ws.on("close", () => {
+
+  });
+
+  ws.on("error", () => {
     setTimeout(function(){
-      ws = new WebSocket("ws://backend:8000");
+      console.info("Connection to the backend refused. Reconnecting...");
+      routes(app, config);
     }, 1000);
   });
 

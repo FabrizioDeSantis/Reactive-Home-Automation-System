@@ -28,6 +28,8 @@ export class HeatPump {
 }
 
 const heatPump = new HeatPump("off", 0);
+const error_prob = 0.05;
+let handler = null;
 
 function toDTO(heatPump) {
   return {
@@ -41,6 +43,12 @@ export function retrieveState() {
   const heatPumpInformations = toDTO(heatPump);
   return heatPumpInformations;
 
+}
+
+export function simulateChanges(){
+  if(Math.random() < error_prob){
+    heatPump.state = "error";
+  }
 }
 
 /**
@@ -104,7 +112,6 @@ function registerHandler(ws, handler) {
 export function routes(app, config) {
 
   const ws = new WebSocket("ws://backend:8000");
-  let handler = null;
 
   ws.on("open", () => {
     console.info("✅ Connected to backend");
@@ -119,8 +126,13 @@ export function routes(app, config) {
   });
 
   ws.on("close", () => {
+    
+  });
+
+  ws.on("error", () => {
     setTimeout(function(){
-      ws = new WebSocket("ws://backend:8000");
+      console.info("Connection to the backend refused. Reconnecting...");
+      routes(app, config);
     }, 1000);
   });
 

@@ -11,8 +11,8 @@ const {merge} = lodash;
 
 const IFACE = '0.0.0.0';
 const PORT = 8084;
-const ERROR_PROB = 0.1;
-const DELAY_PROB = 0.2;
+const ERROR_PROB = 0.2;
+const DELAY_PROB = 0;
 const FREQ_MS = 2000;
 const TTL_SEC = 60;
 

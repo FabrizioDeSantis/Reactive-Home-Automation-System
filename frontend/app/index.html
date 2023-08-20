@@ -43,7 +43,9 @@
                         <small class="text-muted">Today</small>
                     </div>
                     <div class="temperature">
-                        <span class="material-symbols-outlined">device_thermostat</span>
+                        <div class="icons">
+                            <span class="material-symbols-outlined">device_thermostat</span>
+                        </div>
                         <div class="middle">
                             <div class="left">
                                 <h3>Room Temperature</h3>
@@ -54,7 +56,10 @@
                     </div>
                     <script type="text/html" id="heatpump-template">
                         <div class="heatpump">
-                            <span class="material-symbols-outlined">heat_pump_balance</span>
+                            <div class="icons">
+                                <span class="material-symbols-outlined">heat_pump_balance</span>
+                                <span class="material-symbols-outlined" id="refreshHeatPump">refresh</span>
+                            </div>
                             <div class="middle">
                                 <div class="left">
                                     <h3>Heat pump</h3>
@@ -73,7 +78,10 @@
                     </script>
                     <script type="text/html" id="doors-template">
                         <div class="door">
-                            <span class="material-symbols-outlined">door_front</span>
+                            <div class="icons">
+                                <span class="material-symbols-outlined">door_front</span>
+                                <span class="material-symbols-outlined" id="refreshDoor">refresh</span>
+                            </div>
                             <div class="middle">
                                 <div class="left">
                                     <h3 id="door-header">Doors</h3>
@@ -91,7 +99,10 @@
                     </script>
                     <script type="text/html" id="windows-template">
                         <div class="window">
-                            <span class="material-symbols-outlined">home</span>
+                            <div class="icons">
+                                <span class="material-symbols-outlined">home</span>
+                                <span class="material-symbols-outlined" id="refreshWindow">refresh</span>
+                            </div>
                             <div class="middle">
                                 <div class="left">
                                     <h3 id="window-header">Windows</h3>
@@ -112,11 +123,20 @@
                 <div class="graphs">
                     <h2>History</h2>
                     <div class="canvas">
-                        <button class="control_prev" type="button"><span class="material-symbols-outlined">chevron_left</span></button>
-                        <button class="control_next" type="button"><span class="material-symbols-outlined">chevron_right</span></button>
-                        <canvas id="acquisitions"></canvas>
+                        <!-- <button class="control_prev" type="button"><span class="material-symbols-outlined">chevron_left</span></button>
+                        <button class="control_next" type="button"><span class="material-symbols-outlined">chevron_right</span></button> -->
+                        <div class="chartBox">
+                            <canvas id="chartWeather"></canvas>
+                        </div>
+                        <div class="chartBox">
+                            <canvas id="chartThermometer"></canvas>
+                        </div>
+                        <div class="chartBox">
+                            <canvas id="chartHeatPump"></canvas>
+                        </div>
                     </div>
                     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.1.1/chartjs-plugin-zoom.min.js"></script>
                     <script type="module" src="js/acquisitions.js"></script>
                 </div>
             </main>
@@ -236,13 +256,10 @@
     <script src="js/plugins.js"></script>
     <script src="js/commons.js"></script>
     <script src="js/rest-client.js"></script>
-    <script src="js/models.js"></script>
     <script src="js/models-door.js"></script>
     <script src="js/models-window.js"></script>
     <script src="js/models-heatpump.js"></script>
     <script src="js/login.component.js"></script>
-    <script src="js/task.component.js"></script>
-    <script src="js/tasks.component.js"></script>
     <script src="js/window.component.js"></script>
     <script src="js/windows.component.js"></script>
     <script src="js/door.component.js"></script>

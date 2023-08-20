@@ -65,63 +65,52 @@
         openBtn.id = `buttonOn ${this.#model.id}`;
         const closeBtn = this.#element.querySelector("#buttonOff");
         closeBtn.id = `buttonOff ${this.#model.id}`;
+        const refreshBtn = document.querySelector("#refreshWindow");
+        refreshBtn.id = `refreshWindow ${this.#model.id}`;
         let hdlrOpen = new Handler('click', openBtn, () => this.open());
         this.#handlers.push(hdlrOpen);
         let hdlrClose = new Handler('click', closeBtn, () => this.close());
         this.#handlers.push(hdlrClose);
+        let hdlrRestart = new Handler('click', refreshBtn, () => this.restart());
+        this.#handlers.push(hdlrRestart);
 
         return this.#element;
     }
 
-    edit() {
-      if (this.#edit) {
-        this.#edit.classList.remove('hidden');
-      } else {
-        this.#edit = document.createElement('div');
-        this.#edit.className = 'task-edit';
-        this.#edit.innerHTML = document.querySelector('script#task-edit-template').textContent;
-
-        const btnSave = this.#edit.querySelector('button[name=save]');
-        let hdlr = new Handler('click', btnSave, () => this.save());
-        this.#handlers.push(hdlr);
-
-        const btnCancel = this.#edit.querySelector('button[name=cancel]');
-        hdlr = new Handler('click', btnCancel, () => this.cancel());
-        this.#handlers.push(hdlr);
-      }
-
-      const inp = this.#edit.querySelector('input');
-      inp.value = this.#model.description;
-
-      const children = [
-        this.#element.querySelector('.task-left'),
-        this.#element.querySelector('.task-right')];
-
-      children.forEach(c => c.classList.add('hidden'));
-      this.#element.append(this.#edit);
-    }
-
     async open() {
-      console.debug("Attempting to open the door");
+      console.debug("Attempting to open the window");
       try{
         await this.#model.update("open");
       }catch(e){
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         section.classList.add("active");
-        errorMessage.innerHTML = "Error. Window already open";
+        errorMessage.innerHTML = "Error. Window already open or is in error.";
       }
     }
 
     async close() {
-      console.debug("Attempting to close the door");
+      console.debug("Attempting to close the window");
       try{
         await this.#model.update("closed");
       } catch(e){
+        console.log(e.status);
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         section.classList.add("active");
-        errorMessage.innerHTML = "Error. Window already closed";
+        errorMessage.innerHTML = "Error. Window already closed or is in error.";
+      }
+    }
+
+    async restart() {
+      console.debug("Attempting to restart the window");
+      try{
+        await this.#model.update("restart");
+      }catch(e) {
+        const section = document.querySelector("section");
+        const errorMessage = document.querySelector("#error-message");
+        section.classList.add("active");
+        errorMessage.innerHTML = "Error.";
       }
     }
 
@@ -138,32 +127,6 @@
         }
         this._update();
         this._hideEditField();
-      }
-    }
-
-    cancel() {
-      this._hideEditField();
-    }
-
-    complete() {
-      this.emit('completed', this.#model);
-    }
-
-    _hideEditField() {
-      if (this.#edit) {
-        this.#edit.classList.add('hidden');
-      }
-
-      const children = [
-        this.#element.querySelector('.task-left'),
-        this.#element.querySelector('.task-right')];
-      children.forEach(c => c.classList.remove('hidden'));
-    }
-
-    _update() {
-      if (this.#element) {
-        const lbl = this.#element.querySelector('label');
-        lbl.textContent = this.#model.description;
       }
     }
   }

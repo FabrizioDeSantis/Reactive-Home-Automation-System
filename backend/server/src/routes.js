@@ -10,21 +10,6 @@ function sequencer() {
     }
 }
 
-class Task {
-    constructor(id, description) {
-        this._id = id;
-        this._description = description;
-        this._timestamp = new Date();
-    }
-
-    //@formatter:off
-    get id() { return this._id; }
-    get description() { return this._description; }
-    set description(description) { this._description = description; }
-    get timestamp() { return this._timestamp; }
-    //@formatter:on
-}
-
 class Window {
     constructor(windowId, state) {
         this._windowId = windowId;
@@ -84,12 +69,9 @@ const windows = [];
 const doors = [];
 const temperatures = [];
 const clients = new Map();
+const temperaturesAndDates = new Map();
+const temperaturesAndDatesT = new Map();
 let heatPump = null;
-
-// for (let i = 0; i < 5; i++) {
-//     const id = seq();
-//     tasks.push(new Task(id, `Spend more time hacking #${id}`));
-// }
 
 function toDTOWindow(window) {
     return {
@@ -151,6 +133,7 @@ function sendAllData(){
 
             keyWS.send(JSON.stringify({"type": "windows", "value": windowsStates}));
             keyWS.send(JSON.stringify({"type": "temperature", "value": temperatures[temperatures.length-1]}));
+            keyWS.send(JSON.stringify({"type": "temperatures", "value": temperaturesAndDates}));
             keyWS.send(JSON.stringify({"type": "doors", "value": doorsStates}));
         }
     } 
@@ -165,6 +148,7 @@ function sendAllData(){
  */
 export function routes(app, wss, oidc, config) {
     const authenticate = config.auth ? (req, res, next) => oidc.validate(req, res, next) : (_req, _res, next) => next();
+
     wss.on('connection', (ws) => {
       console.log("Client connesso");
       //ws.send(JSON.stringify({"type": "subscribe", "target": "temperature"}));
@@ -221,14 +205,39 @@ export function routes(app, wss, oidc, config) {
 
             case "temperature":
                 console.info("New temperature received from the weather microservice: " + data.value);
+                const temp = data.value;
+                const completeDate = new Date(data.dateTime);
+
+                const hours = completeDate.getHours();
+                const minutes = completeDate.getMinutes();
+                const seconds = completeDate.getSeconds();
+
+                const time = `${hours}:${minutes}:${seconds}`;
+
+                console.info("New temperature received from the weather microservice: " + temp);
+                console.info("Combined time: " + time);
+
                 temperatures.push(data.value);
+
+                services.set("weather", data.value);
+                
+                temperaturesAndDates.set(time, temp);
+                const combinedInfo = `${time}-${temp}`;
+                
                 services.set("weather", data.value);
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
-                        keyWS.send(JSON.stringify({"type": "temperature", "value": data.value}));
-                        keyWS.send(JSON.stringify({"type": "temperatures", "value": temperatures}));
+                        //keyWS.send(JSON.stringify({"type": "temperature", "value": data.value}));
+                        keyWS.send(JSON.stringify({"type": "temperature", "value": combinedInfo}));
+                        //keyWS.send(JSON.stringify({"type": "temperatures", "value": temperaturesAndDates}));
+                        //keyWS.send(JSON.stringify({"type": "temperatures", "value": temperatures}));
+                        //keyWS.send(JSON.stringify({"type": "dates", "value": dates}));
+                    }
+                    if(value == "thermometer"){
+                        keyWS.send(JSON.stringify({"type": "services", "value": Object.fromEntries(services)}));
                     }
                 }
+
                 break;
 
             case "windows":
@@ -316,9 +325,27 @@ export function routes(app, wss, oidc, config) {
                 break;
             
             case "thermometer":
+                console.info("New temperature received from the thermometer microservice: " + data.value);
+                const tempT = data.value;
+                const completeDateT = new Date(data.dateTime);
+
+                const hoursT = completeDateT.getHours();
+                const minutesT = completeDateT.getMinutes();
+                const secondsT = completeDateT.getSeconds();
+
+                const timeT = `${hoursT}:${minutesT}:${secondsT}`;
+
+                console.info("New temperature received from the thermometer microservice: " + tempT);
+                console.info("Combined time: " + timeT);
+                
+                services.set("thermometer", data.value);
+                
+                temperaturesAndDatesT.set(timeT, tempT);
+                const combinedInfoT = `${timeT}-${tempT}`;
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
-                        keyWS.send(JSON.stringify({"type": "thermometer", "value": data.value}));
+                        //keyWS.send(JSON.stringify({"type": "thermometer", "value": data.value}));
+                        keyWS.send(JSON.stringify({"type": "thermometer", "value": combinedInfoT}));
                     }
                 }
                 break;
@@ -338,7 +365,7 @@ export function routes(app, wss, oidc, config) {
         oidc.tokens(req, resp);
     });
 
-    app.get("/windows", (req, resp) => {
+    app.get("/windows", authenticate, (req, resp) => {
         const objects = windows.map(toDTOWindow);
         resp.json({
             total: objects.length,
@@ -346,7 +373,7 @@ export function routes(app, wss, oidc, config) {
         });
     });
 
-    app.get("/doors", (req, resp) => {
+    app.get("/doors", authenticate, (req, resp) => {
         const objects = doors.map(toDTODoor);
         resp.json({
             total: objects.length,
@@ -354,14 +381,14 @@ export function routes(app, wss, oidc, config) {
         });
     });
 
-    app.get("/heatpump", (req, resp) => {
+    app.get("/heatpump", authenticate, (req, resp) => {
         const object = heatPump;
         resp.json({
             result: object
         });
     });
 
-    app.put('/heatpump/state', (req, resp) => {
+    app.put('/heatpump/state', authenticate, (req, resp) => {
         const {state} = req.body;
 
         console.debug('Attempting to change heatpump state to ' + state);
@@ -384,7 +411,7 @@ export function routes(app, wss, oidc, config) {
         });
     });
 
-    app.put('/heatpump/temperatureOp', (req, resp) => {
+    app.put('/heatpump/temperatureOp', authenticate, (req, resp) => {
         const {temperatureOp} = req.body;
 
         console.debug('Attempting to change heatpump operation temperature to ' + temperatureOp);
@@ -407,7 +434,7 @@ export function routes(app, wss, oidc, config) {
         });
     })
 
-    app.put('/window/:id', (req, resp) => {
+    app.put('/window/:id', authenticate, (req, resp) => {
         const {state} = req.body;
         const idRaw = req.params.id;
         console.debug('Attempting to update window', {id: idRaw, state});
@@ -441,7 +468,7 @@ export function routes(app, wss, oidc, config) {
         });
     });
 
-    app.post('/door', (req, resp) => {
+    app.post('/door', authenticate, (req, resp) => {
         const {state} = req.body;
         console.log("Attempting to create a new door", {state: state});
         let dto = {state: state};
@@ -459,7 +486,7 @@ export function routes(app, wss, oidc, config) {
         });
     });
 
-    app.post('/window', (req, resp) => {
+    app.post('/window', authenticate, (req, resp) => {
         const {state} = req.body;
         console.log("Attempting to create a new window", {state: state});
         let dto = {state: state};
@@ -477,65 +504,7 @@ export function routes(app, wss, oidc, config) {
         });
     });
 
-    app.post('/task', authenticate, (req, resp) => {
-        const {description} = req.body;
-        console.debug('Attempting to crete a new task', {description, principal: req.principal.email});
-
-        if (!isNonBlank(description)) {
-            resp.status(400);
-            resp.json({error: 'Missing task description'});
-            return;
-        }
-        if (description.trim().length > 50) {
-            resp.status(400);
-            resp.json({error: 'Too long task description'});
-            return;
-        }
-
-        const task = new Task(seq(), description.trim());
-        tasks.push(task);
-        console.info('Task successfully created', {task, principal: req.principal.email});
-
-        resp.status(201);
-        resp.json(toDTO(task));
-    });
-
-    app.put('/task/:id', authenticate, (req, resp) => {
-        const {description} = req.body;
-        const idRaw = req.params.id;
-        console.debug('Attempting to update task', {id: idRaw, description, principal: req.principal.email});
-
-        if (!isNonBlank(description)) {
-            resp.status(400);
-            resp.json({error: 'Missing task description'});
-            return;
-        }
-        if (description.trim().length > 50) {
-            resp.status(400);
-            resp.json({error: 'Too long task description'});
-            return;
-        }
-        if (!isInteger(idRaw)) {
-            resp.status(400);
-            resp.json({error: 'Invalid task identifier'});
-            return;
-        }
-        const id = parseInt(idRaw, 10);
-        const task = tasks.find(t => t.id === id);
-        if (!task) {
-            resp.status(404);
-            resp.json({error: 'Task not found'});
-            return;
-        }
-
-        task.description = description.trim();
-        resp.status(200);
-        console.info('Task successfully updated', {task, principal: req.principal.email});
-
-        resp.json(toDTO(task));
-    });
-
-    app.put('/door/:id', (req, resp) => {
+    app.put('/door/:id', authenticate, (req, resp) => {
         const {state} = req.body;
         const idRaw = req.params.id;
         console.debug('Attempting to update door', {id: idRaw, state});
@@ -558,6 +527,7 @@ export function routes(app, wss, oidc, config) {
             if(response.status === 400){
                 resp.status(400);
                 resp.json({error: "Status not changed"});
+                return;
             }
             else {
                 resp.status(200);
@@ -568,26 +538,4 @@ export function routes(app, wss, oidc, config) {
         console.info('Door successfully updated', {door});
     });
 
-    app.delete('/task/:id', authenticate, (req, resp) => {
-        const idRaw = req.params.id;
-        console.debug('Attempting to delete task', {id: idRaw, principal: req.principal.email});
-
-        if (!isInteger(idRaw)) {
-            resp.status(400);
-            resp.json({error: 'Invalid task identifier'});
-            return;
-        }
-        const id = parseInt(idRaw, 10);
-        const j = tasks.findIndex(t => t.id === id);
-        if (j < 0) {
-            resp.status(404);
-            resp.json({error: 'Task not found'});
-            return;
-        }
-        const [task] = tasks.splice(j, 1);
-
-        console.info('Task successfully deleted', {task, principal: req.principal.email});
-        resp.status(200);
-        resp.json(toDTO(task));
-    });
 }

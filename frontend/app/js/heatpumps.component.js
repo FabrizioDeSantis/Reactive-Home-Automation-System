@@ -39,66 +39,17 @@
        */
       async init() {
         this.#element = document.createElement('div');
-        // this.#element.className = 'temp';
-        // this.#element.id = 'temp';
-        //this.#element.innerHTML = document.querySelector('script#windows-template').textContent;
-  
-        // const form = this.#element.querySelector('form[name="new-task"]');
-        // if (!form) {
-        //   toast('Cannot initialize components: no <b>form</b> found', 'error');
-  
-        // form.addEventListener('submit', ($event) => {
-        //   $event.preventDefault();
-        //   this.addTask(form);
-        //   form.reset();
-        // });
-  
-        // const a = this.#element.querySelector('a[data-action=complete-selected]');
-        // a.addEventListener('click', ($event) => {
-        //   $event.preventDefault();
-        //   this.removeSelectedTasks();
-        // });
   
         try {
           const resp = await this.#client.get(`heatpump`);
 
           const model = new RestHeatPumpModel(resp.state, resp.temperatureOp, this.#client);
           this.createHeatPumpComponent(model);
-          // resp.results.forEach(dto => {
-          //   const model = new RestWindowModel(dto.id, dto.state, this.#client);
-          //   this.createWindowComponent(model);
-          // });
         } catch (e) {
           console.error('Something went wrong getting heatpump', e);
         }
   
         return this.#element;
-      }
-  
-      async removeTask(task) {
-        // try {
-        //   let i = this.#tasks.findIndex(t => t.model.id === task.id);
-        //   if (i >= 0) {
-        //     console.log(`Deleting task ${task.id}...`);
-        //     const {model} = this.#tasks[i];
-        //     await model.delete();
-        //     console.log(`Task ${model.id}, '${model.description}' successfully deleted!`);
-  
-        //     // this must be repeated as other things might have changed
-        //     i = this.#tasks.findIndex(t => t.model.id === task.id);
-        //     const {component} = this.#tasks[i];
-        //     component.destroy();
-        //     this.#tasks.splice(i, 1);
-        //   }
-        // } catch (e) {
-        //   console.error(`Cannot delete task ${task.id}`, e);
-        // }
-      }
-  
-      removeSelectedTasks() {
-        const inps = this.#element.querySelectorAll('.task-left input[type=checkbox]:checked');
-        const tasks = Array.prototype.slice.apply(inps).map(el => ({id: taskIdOf(el)}));
-        tasks.forEach(this.removeTask.bind(this));
       }
   
       createHeatPumpComponent(model) {
@@ -108,18 +59,6 @@
         const el = component.init();
         root.appendChild(el);
         //component.on('completed', this.removeTask.bind(this));
-      }
-  
-      async addTask(form) {
-        const inp = form.querySelector('input');
-        const desc = (inp.value || '').trim();
-        if (desc) {
-          console.log(`Saving new task '${desc}'...`);
-          const model = new RestTaskModel(undefined, desc, this.#client);
-          await model.create();
-          console.log('Task successfully saved', {model: model.toDto()});
-          this.createTaskComponent(model);
-        }
       }
     }
   

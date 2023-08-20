@@ -71,8 +71,6 @@ async function run() {
   const app = express();
   init(app);
 
-  await sleep(10000);
-
   console.debug(`🔧 Initializing routes...`);
   routes(app, options.config);
   fallbacks(app);

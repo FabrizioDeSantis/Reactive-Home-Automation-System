@@ -58,13 +58,7 @@
   
         return this.#element;
       }
-  
-      removeSelectedTasks() {
-        const inps = this.#element.querySelectorAll('.task-left input[type=checkbox]:checked');
-        const tasks = Array.prototype.slice.apply(inps).map(el => ({id: taskIdOf(el)}));
-        tasks.forEach(this.removeTask.bind(this));
-      }
-  
+
       createWindowComponent(model) {
         const root = this.#element;
         const component = new WindowComponent(model);

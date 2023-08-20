@@ -12,12 +12,12 @@
   let subscription = null;
 
   async function init() {
-    //const token = localStorage.getItem('id_token');
+    const token = localStorage.getItem('id_token');
     let elem, /** @type {{init:()=>Promise<HTMLElement>,destroy:()=>void}} */ comp;
     let elem_window, /** @type {{init:()=>Promise<HTMLElement>,destroy:()=>void}} */ comp_window;
     let elem_door, /** @type {{init:()=>Promise<HTMLElement>,destroy:()=>void}} */ comp_door;
     let elem_pump, /** @type {{init:()=>Promise<HTMLElement>,destroy:()=>void}} */ comp_pump;
-    const token = true;
+    //const token = true;
     if (token) {
       //document.body.classList.toggle("enable-theme-var");
       comp_window = new WindowsComponent(client);
@@ -39,7 +39,7 @@
       components.push(comp_window);
     } else {
       // initializes the login panel
-      document.body.classList.toggle("disable-theme-var");
+      //document.body.classList.toggle("disable-theme-var");
       comp = new LoginComponent(client);
       subscription = comp.on('authenticated', init);
       elem = await comp.init();

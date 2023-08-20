@@ -4,6 +4,7 @@ import {DateTime} from 'luxon';
 import {anIntegerWithPrecision} from './random.js';
 import {EventEmitter} from 'events';
 import { retrieveState } from './routes.js';
+import { simulateChanges } from './routes.js';
 
 class ValidationError extends Error {
   #message;
@@ -138,11 +139,6 @@ export class HeatPumpHandler extends EventEmitter {
    * @private
    */
   _send(msg) {
-    if (this.#config.failures && Math.random() < this.#config.errorProb) {
-      console.info('🐛 There\'s a bug preventing the message to be sent', {handler: this.#name});
-      return;
-    }
-
     console.debug('💬 Dispatching message', {handler: this.#name});
     this.#ws.send(JSON.stringify(msg));
   }
@@ -151,13 +147,22 @@ export class HeatPumpHandler extends EventEmitter {
     if (this.#timeout) {
       return;
     }
-
     console.debug('🔥 Subscribing to heatpump state', {handler: this.#name});
+    this._sendState();
     const callback = () => {
-      this._sendState();
+      this._simulateError();
       this.#timeout = setTimeout(callback, this._someMillis());
     };
     this.#timeout = setTimeout(callback, 0);
+  }
+
+  _simulateError(){
+    if (this.#config.failures && Math.random() < this.#config.errorProb) {
+      console.info('🐛 Simulating state change', {handler: this.#name});
+      simulateChanges();
+      this._sendState();
+      return;
+    }
   }
 
   _onUnsubscribe() {

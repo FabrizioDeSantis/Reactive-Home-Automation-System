@@ -11,10 +11,10 @@ const {merge} = lodash;
 
 const IFACE = '0.0.0.0';
 const PORT = 8082;
-const ERROR_PROB = 0;
-// const DELAY_PROB = 0.2;
+const ERROR_PROB = 0.2;
+const DOWN_PROB = 1;
 const DELAY_PROB = 0;
-// const FREQ_MS = 2000;
+const FREQ_MS = 10000;
 const TTL_SEC = 60;
 
 function assertPort(port, program, excode) {
@@ -34,11 +34,11 @@ function configFromEnv() {
   const cfg = {};
   if (process.env.IFACE) cfg.iface = process.env.IFACE;
   if (process.env.PORT) cfg.port = process.env.PORT;
-  // if (process.env.FREQUENCY) cfg.frequency = parseInt(process.env.FREQUENCY, 10);
+  if (process.env.FREQUENCY) cfg.frequency = parseInt(process.env.FREQUENCY, 10);
   if (process.env.TTL) cfg.timeToLive = parseInt(process.env.TTL, 10);
   if (process.env.DELAY_PROB) cfg.delayProb = parseFloat(process.env.DELAY_PROB);
   if (process.env.ERROR_PROB) cfg.errorProb = parseFloat(process.env.ERROR_PROB);
-  // if (process.env.FREQUENCY) cfg.frequency = parseInt(process.env.FREQUENCY, 10);
+  if (process.env.DOWN_PROB) cfg.downProb = parseFloat(process.env.DOWN_PROB);
   return cfg;
 }
 
@@ -65,10 +65,11 @@ export function parse() {
       .version(info.version)
       .option('-i, --iface <interface>', 'The interface the service will listen to for requests (default all interfaces)')
       .option('-p, --port <port>', 'The port number the service will listen to for requests (default 8000)', p => parseInt(p, 10))
-      // .option('-f, --frequency <ms>', 'The frequency each temperature message is sent (default 2000)', p => parseInt(p, 10))
+      .option('-f, --frequency <ms>', 'The frequency each temperature message is sent (default 2000)', p => parseInt(p, 10))
       .option('-t, --time-to-live <s>', 'The average time to live of a client connection, if 0 then it\' never gonna die (default 60)', p => parseInt(p, 10))
       .option('-d, --delay-prob <prob>', 'The probability that a message is delayed (default 0.2)', parseFloat)
       .option('-e, --error-prob <prob>', 'The probability that an error occurs (default 0.1)', parseFloat)
+      .option('-o, --down-prob <prob>', 'The probability that the microservice goes down (default 0.1)', parseFloat)
       .option('-E, --no-env', 'Ignores the .env file')
       .option('-F, --no-failures', 'Don\'t simulate failures')
       .option('-D, --no-delays', 'Don\'t simulate delays')
@@ -81,9 +82,10 @@ export function parse() {
   const def = {
     iface: IFACE,
     port: PORT,
-    //frequency: FREQ_MS,
+    frequency: FREQ_MS,
     delayProb: DELAY_PROB,
     errorProb: ERROR_PROB,
+    downProb: DOWN_PROB,
     timeToLive: TTL_SEC,
   };
 
@@ -95,9 +97,10 @@ export function parse() {
     port: options.port,
     failures: options.failures,
     delays: options.delays,
-    //frequency: options.frequency,
+    frequency: options.frequency,
     delayProb: options.delayProb,
     errorProb: options.errorProb,
+    downProb: options.downProb,
     timeToLive: options.timeToLive
   });
 

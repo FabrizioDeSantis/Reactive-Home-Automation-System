@@ -102,17 +102,18 @@ body{
 
 .container-main{
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    /* grid-template-columns: repeat(2, 1fr); */
+    grid-template-columns: 2fr 1fr;
 }
 
 .container{
-    width: 95%;
+    width: 100%;
     margin: 0 auto;
     gap: 1.8rem;
 }
 
 .container-right{
-    width: 95%;
+    width: 90%;
     padding-top: 2.4rem;
     margin: 0 auto;
     gap: 1.8rem;
@@ -201,6 +202,29 @@ main .insights > div:hover{
 
 main .insights > div span{
     background: var(--color-primary);
+    padding: 0.5rem;
+    border-radius: 50%;
+    color: var(--color-white);
+}
+
+span[id^='refresh']{
+    float: right;
+    background: var(--color-dark-variant);
+    opacity: 0;
+    padding: 0.5rem;
+    border-radius: 50%;
+    color: var(--color-white);
+}
+
+
+span[id^='refresh']:hover{
+    cursor: pointer;
+}
+
+span[id^='refresh'].active{
+    float: right;
+    background: var(--color-dark-variant);
+    opacity: 1;
     padding: 0.5rem;
     border-radius: 50%;
     color: var(--color-white);
@@ -391,6 +415,11 @@ main .graphs a {
     color: var(--color-primary);
 }
 
+.container .graphs .canvas {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+
 .container .graphs > div {
     background: var(--color-white);
     padding: var(--card-padding);
@@ -405,19 +434,36 @@ main .graphs > div:hover {
     box-shadow: none;
 }
 
-.container .graphs .canvas .control_prev{
+.container .graphs .canvas canvas{
+    padding: 10px;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* .container .graphs .canvas .control_prev{
     float: left;
-    border-radius: 50%;
+    border-radius: var(--border-radius-1);
     align-items: center;
-    background: none;
+    color: var(--color-white);
+    font-size: 10px;
+    background: var(--color-primary);
+}
+
+.container .graphs .canvas .control_prev:hover{
+    cursor: pointer;
 }
 
 .container .graphs .canvas .control_next{
     float: right;
-    border-radius: 50%;
+    border-radius: var(--border-radius-1);
     align-items: center;
-    background: none;
+    color: var(--color-white);
+    background: var(--color-primary);
 }
+
+.container .graphs .canvas .control_next:hover{
+    cursor: pointer;
+} */
 
 /* RIGHT */
 
@@ -606,7 +652,7 @@ div[id^='buttonNew']:hover {
     border: 1px solid var(--color-info-light);
     font-size: px;
     width: 100%;
-    border-radius: var(--border-radius-2);
+    border-radius: var(--border-radius-1);
     text-align: center;
     font-weight: bold;
     color: var(--color-dark);

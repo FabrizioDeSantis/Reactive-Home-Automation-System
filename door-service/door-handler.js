@@ -4,6 +4,7 @@ import {DateTime} from 'luxon';
 import {anIntegerWithPrecision} from './random.js';
 import {EventEmitter} from 'events';
 import { retrieveStates } from './routes.js';
+import { simulateChanges } from './routes.js';
 
 class ValidationError extends Error {
   #message;
@@ -25,7 +26,7 @@ export class DoorHandler extends EventEmitter {
   #ws;
   #config;
   #name;
-  //#timeout;
+  #timeout;
   #buffer;
   #death;
 
@@ -69,12 +70,12 @@ export class DoorHandler extends EventEmitter {
   }
 
   stop() {
-    // if (this.#timeout) {
-    //   clearTimeout(this.#timeout);
-    // }
-    // if (this.#death) {
-    //   clearTimeout(this.#death);
-    // }
+    if (this.#timeout) {
+      clearTimeout(this.#timeout);
+    }
+    if (this.#death) {
+      clearTimeout(this.#death);
+    }
   }
 
   start() {
@@ -138,33 +139,38 @@ export class DoorHandler extends EventEmitter {
    * @private
    */
   _send(msg) {
-    if (this.#config.failures && Math.random() < this.#config.errorProb) {
-      console.info('🐛 There\'s a bug preventing the message to be sent', {handler: this.#name});
-      return;
-    }
     console.debug('💬 Dispatching message', {handler: this.#name});
     this.#ws.send(JSON.stringify(msg));
   }
 
   _onSubscribe() {
-    // if (this.#timeout) {
-    //   return;
-    // }
+    if (this.#timeout) {
+      return;
+    }
     console.debug('🌡  Subscribing to window state', {handler: this.#name});
     this._sendState();
-    // const callback = () => {
-    //   this._sendState();
-    //   this.#timeout = setTimeout(callback, this._someMillis());
-    // };
-    // this.#timeout = setTimeout(callback, 0);
+    const callback = () => {
+      this._simulateError();
+      this.#timeout = setTimeout(callback, this._someMillis());
+    };
+    this.#timeout = setTimeout(callback, 0);
+  }
+
+  _simulateError(){
+    if (this.#config.failures && Math.random() < this.#config.errorProb) {
+      console.info('🐛 Simulating state change', {handler: this.#name});
+      simulateChanges();
+      this._sendState();
+      return;
+    }
   }
 
   _onUnsubscribe() {
-    // if (!this.#timeout) {
-    //   return;
-    // }
-    // clearTimeout(this.#timeout);
-    // this.#timeout = 0;
+    if (!this.#timeout) {
+      return;
+    }
+    clearTimeout(this.#timeout);
+    this.#timeout = 0;
     this._send({ack: true});
   }
 }

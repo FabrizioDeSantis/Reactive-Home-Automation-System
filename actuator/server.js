@@ -58,10 +58,6 @@ function fallbacks(app) {
   });
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 async function run() {
   // creates the configuration options and the logger
   const options = opts();
@@ -70,8 +66,6 @@ async function run() {
   console.debug(`🔧 Initializing Express...`);
   const app = express();
   init(app);
-
-  await sleep(3000);
 
   console.debug(`🔧 Initializing routes...`);
   routes(app, options.config);

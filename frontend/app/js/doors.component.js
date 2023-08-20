@@ -58,50 +58,12 @@
         return this.#element;
       }
   
-      async removeTask(task) {
-        // try {
-        //   let i = this.#tasks.findIndex(t => t.model.id === task.id);
-        //   if (i >= 0) {
-        //     console.log(`Deleting task ${task.id}...`);
-        //     const {model} = this.#tasks[i];
-        //     await model.delete();
-        //     console.log(`Task ${model.id}, '${model.description}' successfully deleted!`);
-  
-        //     // this must be repeated as other things might have changed
-        //     i = this.#tasks.findIndex(t => t.model.id === task.id);
-        //     const {component} = this.#tasks[i];
-        //     component.destroy();
-        //     this.#tasks.splice(i, 1);
-        //   }
-        // } catch (e) {
-        //   console.error(`Cannot delete task ${task.id}`, e);
-        // }
-      }
-  
-      removeSelectedTasks() {
-        const inps = this.#element.querySelectorAll('.task-left input[type=checkbox]:checked');
-        const tasks = Array.prototype.slice.apply(inps).map(el => ({id: taskIdOf(el)}));
-        tasks.forEach(this.removeTask.bind(this));
-      }
-  
       createDoorComponent(model) {
         const root = this.#element;
         const component = new DoorComponent(model);
         this.#doors.push({model, component});
         const el = component.init();
         root.appendChild(el);
-      }
-  
-      async addTask(form) {
-        const inp = form.querySelector('input');
-        const desc = (inp.value || '').trim();
-        if (desc) {
-          console.log(`Saving new task '${desc}'...`);
-          const model = new RestTaskModel(undefined, desc, this.#client);
-          await model.create();
-          console.log('Task successfully saved', {model: model.toDto()});
-          this.createTaskComponent(model);
-        }
       }
 
       async addDoor() {

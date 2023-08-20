@@ -76,8 +76,12 @@ export function routes(app, config) {
     }
   });
   ws.on("close", () => {
+    
+  });
+  ws.on("error", () => {
     setTimeout(function(){
-      ws = new WebSocket("ws://backend:8000");
+      console.info("Connection to the backend refused. Reconnecting...");
+      routes(app, config);
     }, 1000);
   });
 }

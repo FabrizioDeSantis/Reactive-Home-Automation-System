@@ -3,7 +3,8 @@
 import {DateTime} from 'luxon';
 import {anIntegerWithPrecision} from './random.js';
 import {EventEmitter} from 'events';
-import { retrieveStates } from './routes.js';
+import {retrieveStates} from './routes.js';
+import {simulateChanges} from './routes.js';
 
 class ValidationError extends Error {
   #message;
@@ -25,7 +26,7 @@ export class WindowHandler extends EventEmitter {
   #ws;
   #config;
   #name;
-  // #timeout;
+  #timeout;
   #buffer;
   #death;
 
@@ -45,6 +46,10 @@ export class WindowHandler extends EventEmitter {
 
   get name() {
     return this.#name;
+  }
+
+  get death(){
+    return this.#death;
   }
 
   /**
@@ -69,12 +74,12 @@ export class WindowHandler extends EventEmitter {
   }
 
   stop() {
-    // if (this.#timeout) {
-    //   clearTimeout(this.#timeout);
-    // }
-    // if (this.#death) {
-    //   clearTimeout(this.#death);
-    // }
+    if (this.#timeout) {
+      clearTimeout(this.#timeout);
+    }
+    if (this.#death) {
+      clearTimeout(this.#death);
+    }
   }
 
   start() {
@@ -120,16 +125,29 @@ export class WindowHandler extends EventEmitter {
     // message is always appended to the buffer
     this.#buffer.push(msg);
 
-    // messages are dispatched immediately if delays are disabled or a random number is
-    // generated greater than `delayProb` messages
-    if (!this.#config.delays || Math.random() > this.#config.delayProb) {
-      for (const bMsg of this.#buffer) {
-        this._send(bMsg);
+    if(!this.#death){
+      // messages are dispatched immediately if delays are disabled or a random number is
+      // generated greater than `delayProb` messages
+      if (!this.#config.delays || Math.random() > this.#config.delayProb) {
+        for (const bMsg of this.#buffer) {
+          this._send(bMsg);
+        }
+        this.#buffer = [];
+      } else {
+        console.info(`💤 Due to network delays, ${this.#buffer.length} messages are still queued`, {handler: this.#name});
       }
-      this.#buffer = [];
-    } else {
-      console.info(`💤 Due to network delays, ${this.#buffer.length} messages are still queued`, {handler: this.#name});
     }
+  }
+
+  _simulateDowntime(){
+    if(!this.#death && Math.random() < this.#config.downProb){
+      console.info("📉 Simulating downtime", {handler: this.#name});
+      this.#death = true;
+    }
+    else if(this.#death){
+      console.info("📈 Microservice up", {handler: this.#name});
+      this.#death = false;
+    } 
   }
 
   /**
@@ -138,35 +156,44 @@ export class WindowHandler extends EventEmitter {
    * @private
    */
   _send(msg) {
-    if (this.#config.failures && Math.random() < this.#config.errorProb) {
-      console.info('🐛 There\'s a bug preventing the message to be sent', {handler: this.#name});
-      return;
-    }
-
     console.debug('💬 Dispatching message', {handler: this.#name});
     this.#ws.send(JSON.stringify(msg));
   }
 
   _onSubscribe() {
-    // if (this.#timeout) {
-    //   return;
-    // }
+    if (this.#timeout) {
+      return;
+    }
 
     console.debug('🪟 Subscribing to window state', {handler: this.#name});
     this._sendState();
-    // const callback = () => {
-    //   this._sendState();
-    //   this.#timeout = setTimeout(callback, this._someMillis());
-    // };
-    // this.#timeout = setTimeout(callback, 0);
+    const callback = () => {
+      this._simulateError();
+      this.#timeout = setTimeout(callback, this._someMillis());
+    };
+    this.#timeout = setTimeout(callback, 0);
+    const callbackDownTime = () => {
+      this._simulateDowntime();
+      setTimeout(callbackDownTime, this._someMillis());
+    };
+    setTimeout(callbackDownTime, 0);
+  }
+
+  _simulateError(){
+    if (this.#config.failures && Math.random() < this.#config.errorProb) {
+      console.info('🐛 Simulating state change', {handler: this.#name});
+      simulateChanges();
+      this._sendState();
+      return;
+    }
   }
 
   _onUnsubscribe() {
-    // if (!this.#timeout) {
-    //   return;
-    // }
-    // clearTimeout(this.#timeout);
-    // this.#timeout = 0;
+    if (!this.#timeout) {
+      return;
+    }
+    clearTimeout(this.#timeout);
+    this.#timeout = 0;
     this._send({ack: true});
   }
 }
