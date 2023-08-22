@@ -352,8 +352,8 @@ export function routes(app, wss, oidc, config) {
                 break;
             
             case "thermometer":
-                console.info("New temperature received from the thermometer microservice: " + data.value);
-                const tempT = data.value;
+                console.info("New temperature received from the thermometer microservice: " + data.roomTemp);
+                const tempT = data.roomTemp;
                 const completeDateT = new Date(data.dateTime);
 
                 const hoursT = completeDateT.getHours();
@@ -365,7 +365,7 @@ export function routes(app, wss, oidc, config) {
                 console.info("New temperature received from the thermometer microservice: " + tempT);
                 console.info("Combined time: " + timeT);
                 
-                services.set("thermometer", data.value);
+                services.set("thermometer", data.roomTemp);
                 
                 temperaturesAndDatesT.set(timeT, tempT);
                 const combinedInfoT = `${timeT}-${tempT}`;
