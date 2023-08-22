@@ -1,6 +1,5 @@
 'use strict';
 
-import {v4 as uuid} from 'uuid';
 import fetch from 'node-fetch';
 
 async function makeRequest(type, url, data, timeout) {
@@ -48,7 +47,7 @@ export function routes(app, config) {
         }
         else{
           resp.status(201);
-          resp.json({result: "Success"});
+          resp.json({result: "Door successfully added"});
         }
       });
   });
@@ -67,7 +66,7 @@ export function routes(app, config) {
         }
         else{
           resp.status(201);
-          resp.json({result: "Success"});
+          resp.json({result: "Window successfully added"});
         }
       });
   });
@@ -90,11 +89,11 @@ export function routes(app, config) {
             console.info('Response from heatpump microservice: ', response.json());
             if(response.status === 400){
               resp.status(400);
-              resp.json({error: "State not changed"});
+              resp.json({error: "Heatpump state not changed"});
             }
             else{
               resp.status(200);
-              resp.json({result: "Success"});
+              resp.json({result: "Heatpump state successfully changed"});
             }
       });
     }
@@ -115,6 +114,10 @@ export function routes(app, config) {
         resp.status(400);
         resp.json({error: "Operation temperature is too high"});
       }
+      else if(parseInt(temperatureOp, 10) < 0){
+        resp.status(400);
+        resp.json({error: "Operation temperature must be positive"})
+      }
       else{
         let dto = {temperatureOp: temperatureOp};
 
@@ -126,7 +129,7 @@ export function routes(app, config) {
               }
               else{
                 resp.status(200);
-                resp.json({result: "Success"});
+                resp.json({result: "Operation temperature successfully changed"});
               }
         });
       }
@@ -136,10 +139,12 @@ export function routes(app, config) {
   app.put('/door/:id', (req, resp) => {
     let {state, actual} = req.body;
     const idRaw = req.params.id;
+
     console.debug('Attempting to update door', {id: idRaw, state});
+
     if(state === actual || (actual === "error" && state !== "restart")) {
       resp.status(400);
-      resp.json({error: 'Error'});
+      resp.json({error: 'Error updating door state'});
     }
     else{
       if(state === "restart"){
@@ -151,11 +156,11 @@ export function routes(app, config) {
         console.log('Response from service:', response.json());
         if(response.status === 400){
           resp.status(400);
-          resp.json({error: "Status not changed"});
+          resp.json({error: "Door state not changed"});
         }
         else{
           resp.status(200);
-          resp.json({result: "Success"});
+          resp.json({result: "State of door " + id + " successfully changed"});
         }
       });
     }
@@ -180,11 +185,11 @@ export function routes(app, config) {
             console.info('Response from window:', response.json());
             if(response.status === 400){
               resp.status(400);
-              resp.json({error: "Status not changed"});
+              resp.json({error: "Window state not changed"});
             }
             else{
               resp.status(200);
-              resp.json({result: "Success"});
+              resp.json({result: "State of window " + id + " successfully changed"});
             }
         });
     }

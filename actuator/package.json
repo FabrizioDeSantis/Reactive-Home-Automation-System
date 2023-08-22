@@ -1,7 +1,7 @@
 {
-    "name": "window-sensor",
+    "name": "actuator",
     "version": "1.0.0",
-    "description": "A microservice that provides info on the state of a window",
+    "description": "A microservice that acts as intermediator for REST calls",
     "main": "server.js",
     "type": "module",
     "scripts": {
