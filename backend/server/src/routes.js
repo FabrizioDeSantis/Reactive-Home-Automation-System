@@ -69,7 +69,7 @@ const windows = [];
 const doors = [];
 const temperatures = [];
 const clients = new Map();
-const temperaturesAndDates = new Map();
+const temperaturesAndDates = [];
 const temperaturesAndDatesT = new Map();
 let heatPump = null;
 
@@ -157,6 +157,8 @@ export function routes(app, wss, oidc, config) {
       ws.on('message', (message) => {
         try {
           const data = JSON.parse(message);
+          let hours = null, minutes = null, seconds = null, day = null, month = null, year = null, time = null, date = null, temp = null, completeDate = null;
+          let combinedInfo = null;
           switch(data.type){
             case "subscribe":
                 switch(data.source){
@@ -205,24 +207,33 @@ export function routes(app, wss, oidc, config) {
 
             case "temperature":
                 console.info("New temperature received from the weather microservice: " + data.value);
-                const temp = data.value;
-                const completeDate = new Date(data.dateTime);
+                temp = data.value;
+                completeDate = new Date(data.dateTime);
 
-                const hours = completeDate.getHours();
-                const minutes = completeDate.getMinutes();
-                const seconds = completeDate.getSeconds();
+                console.log(completeDate);
 
-                const time = `${hours}:${minutes}:${seconds}`;
+                hours = completeDate.getHours();
+                minutes = completeDate.getMinutes();
+                seconds = completeDate.getSeconds();
+
+                year = completeDate.getFullYear();
+                month = completeDate.getMonth() + 1;
+                day = completeDate.getDate();
+
+                time = `${hours}:${minutes}:${seconds}`;
+                date = `${day}-${month}-${year}`;
 
                 console.info("New temperature received from the weather microservice: " + temp);
                 console.info("Combined time: " + time);
+                console.info("Combined date: " + date);
 
                 temperatures.push(data.value);
 
                 services.set("weather", data.value);
                 
-                temperaturesAndDates.set(time, temp);
-                const combinedInfo = `${time}-${temp}`;
+                temperaturesAndDates.push([time, temp]);
+
+                combinedInfo = `${time}/${date}/${temp}`;
                 
                 services.set("weather", data.value);
                 for (let [keyWS, value] of clients) {
@@ -304,7 +315,27 @@ export function routes(app, wss, oidc, config) {
             case "heatpump":
                 const state = data.value.state;
                 const temperatureOp = parseInt(data.value.temperatureOp, 10);
-                console.info(data);
+                
+                completeDate = new Date(data.dateTime);
+
+                console.log(completeDate);
+
+                hours = completeDate.getHours();
+                minutes = completeDate.getMinutes();
+                seconds = completeDate.getSeconds();
+
+                year = completeDate.getFullYear();
+                month = completeDate.getMonth() + 1;
+                day = completeDate.getDate();
+
+                time = `${hours}:${minutes}:${seconds}`;
+                date = `${day}-${month}-${year}`;
+
+                console.info("New temperature received from the heatpump microservice: " + temperatureOp);
+                console.info("Combined time heatpump: " + time);
+                console.info("Combined date heatpump: " + date);
+
+                combinedInfo = `${time}/${date}/${temperatureOp}/${state}`;
 
                 if(heatPump === null){
                     heatPump = new HeatPump(state, temperatureOp);
@@ -316,7 +347,7 @@ export function routes(app, wss, oidc, config) {
                 services.set("heatpump", heatPump);
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
-                        keyWS.send(JSON.stringify({"type": "heatpump", "value": data.value}));
+                        keyWS.send(JSON.stringify({"type": "heatpump", "value": combinedInfo}));
                     }
                     if(value == "thermometer"){
                         keyWS.send(JSON.stringify({"type": "services", "value": Object.fromEntries(services)}));

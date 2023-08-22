@@ -2,6 +2,7 @@
 
 (async function () {
   const client = new RestClient('/api');
+  const wsclient = new WSClient();
   const root = document.querySelector('#info');
   const rootDoor = document.querySelector('#info-door');
   const rootPump = document.querySelector('#info-pump');
@@ -20,6 +21,7 @@
     //const token = true;
     if (token) {
       //document.body.classList.toggle("enable-theme-var");
+      await wsclient.init();
       comp_window = new WindowsComponent(client);
       comp_door = new DoorsComponent(client);
       comp_pump = new HeatPumpsComponent(client);

@@ -4,90 +4,6 @@ for (let i = 0; i < 12; ++i) {
   labels.push(i.toString());
 }
 
-// const charData = [
-//     {
-//         type: 'line',
-//         data: {
-//         labels: [1],
-//             datasets: [{
-//                 label: 'Temperature Weather (°C)',
-//                 data: [1],
-//                 borderColor: "rgb(255, 99, 132)",
-//                 borderWidth: 3,
-//                 tension: 0.1,
-//                 fill: false
-//             }]
-//         },
-//         options: {
-//             plugins: {
-//                 zoom: {
-//                   zoom: {
-//                     pan: {
-//                         enabled: true,
-//                     },
-//                     wheel: {
-//                       enabled: true,
-//                     },
-//                     pinch: {
-//                       enabled: true
-//                     },
-//                     mode: 'x',
-//                   }
-//                 }
-//               },
-//             responsive: true,
-//             interaction: {
-//                 intersect: false,
-//             },
-//             scales: {
-//                 y: {
-//                     display: true,
-//                     title: {
-//                     display: true,
-//                     text: 'Value'
-//                     },
-//                     suggestedMin: 0,
-//                     suggestedMax: 25
-//                 },
-//                 x: {
-//                     maxDataPoints: 5
-//                 }
-//             }
-//         }
-//     },
-//     {
-//         type: 'line',
-//         data: {
-//         labels: labels,
-//             datasets: [{
-//                 label: 'Temperature Thermometer (°C)',
-//                 data: [0, 20, 20, 60, 60, 120, 180, 1000, 125, 105, 110, 170],
-//                 borderColor: "rgb(54, 162, 235)",
-//                 borderWidth: 3,
-//                 tension: 0.1,
-//                 fill: false
-//             }]
-//         },
-//         options: {
-//             responsive: true,
-//             interaction: {
-//                 intersect: false,
-//             },
-//             scales: {
-//                 y: {
-//                     display: true,
-//                     title: {
-//                     display: true,
-//                     text: 'Value'
-//                     },
-//                     suggestedMin: 0,
-//                     suggestedMax: 25
-//                 }
-//             }
-//         }
-//     }
-// ];
-
 // Weather chart
 
 const dataWeather = {
@@ -182,7 +98,7 @@ const dataHeatPump = {
     labels: labels,
     datasets: [{
         label: 'Temperature Heat Pump (°C)',
-        data: [0, 20, 20, 60, 60, 120, 180, 1000, 125, 105, 110, 170],
+        data: [],
         borderColor: "rgb(75, 192, 192)",
         borderWidth: 3,
         tension: 0.1,
@@ -230,4 +146,5 @@ export function addData(chart, label, newData) {
 
 window.myChartWeather = myChartWeather;
 window.myChartThermometer = myChartThermometer;
-export {myChartWeather, myChartThermometer};
+window.myChartHeatPump = myChartHeatPump;
+export {myChartWeather, myChartThermometer, myChartHeatPump};
