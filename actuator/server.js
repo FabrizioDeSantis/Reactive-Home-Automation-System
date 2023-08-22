@@ -79,7 +79,7 @@ async function run() {
 }
 
 run().then(() => {
-  console.info('🏃 Window sensor up and running');
+  console.info('🏃 Actuator up and running');
 }).catch(err => {
   console.error('💩 Oh shit...', err);
 });
