@@ -120,7 +120,7 @@ async function run() {
 
 // noinspection JSIgnoredPromiseFromCall
 run().then(() => {
-  console.info('🏃 Application up and running');
+  console.info('🏃 Backend up and running');
 }).catch(err => {
   console.error('💩 Oh shit...', err);
 });

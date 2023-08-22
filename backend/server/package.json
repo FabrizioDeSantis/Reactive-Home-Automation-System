@@ -1,7 +1,7 @@
 {
-  "name": "server",
+  "name": "backend",
   "version": "2.0.0",
-  "description": "REST APIs for the TODO web application",
+  "description": "Backend for the Reactive Home Automation System",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
@@ -14,10 +14,10 @@
     "type": "git",
     "url": "git+ssh://git@github.com/SOI-Unipr/todo-server.git"
   },
-  "author": "Daniele Porta",
+  "author": "Fabrizio De Santis",
   "maintainers": [
-    "Fabio Strozzi <fabio.strozzi@mapsgroup.it>",
-    "Daniele Porta <daniele.porta@mapsgroup.it>"
+    "Fabrizio De Santis <fabrizio.desantis@studenti.unipr.it>",
+    "Francesco Invitto <francesco.invitto@studenti.unipr.it>"
   ],
   "license": "MIT",
   "bugs": {

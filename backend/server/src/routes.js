@@ -150,10 +150,6 @@ export function routes(app, wss, oidc, config) {
     const authenticate = config.auth ? (req, res, next) => oidc.validate(req, res, next) : (_req, _res, next) => next();
 
     wss.on('connection', (ws) => {
-      console.log("Client connesso");
-      //ws.send(JSON.stringify({"type": "subscribe", "target": "temperature"}));
-      // type, source/target
-      //console.info(ws);
       ws.on('message', (message) => {
         try {
           const data = JSON.parse(message);
@@ -430,12 +426,12 @@ export function routes(app, wss, oidc, config) {
             console.log('Response from actuator:', response);
             if(response.status === 400){
                 resp.status(400);
-                resp.json({error: "State not changed"});
+                resp.json({error: "Heatpump state not changed"});
                 console.info("Heatpump state not updated");
             }
             else {
                 resp.status(200);
-                resp.json({result: "Success"});
+                resp.json({result: "Heatpump state successfully updated"});
                 heatPump.state = state;
                 console.info('Heatpump state successfully updated: ', {heatPump});
             }
@@ -454,13 +450,13 @@ export function routes(app, wss, oidc, config) {
             if(response.status === 400){
                 resp.status(400);
                 resp.json({error: "Operation temperature not changed"});
-                console.info("Heatpump temperature not updated");
+                console.info("Heatpump operation temperature not updated");
             }
             else {
                 resp.status(200);
-                resp.json({result: "Success"});
+                resp.json({result: "Operation temperature successfully updated"});
                 heatPump.temperatureOp = temperatureOp;
-                console.info('Heatpump temperature successfully updated: ', {heatPump});
+                console.info('Heatpump operation temperature successfully updated: ', {heatPump});
             }
         });
     })
@@ -475,8 +471,10 @@ export function routes(app, wss, oidc, config) {
             resp.json({error: 'Invalid window identifier'});
             return;
         }
+
         const id = parseInt(idRaw, 10);
         const window = windows.find(t => t.windowId === id);
+
         if (!window) {
             resp.status(404);
             resp.json({error: 'Window not found'});
@@ -487,12 +485,12 @@ export function routes(app, wss, oidc, config) {
             console.info('Response from actuator:', response.json());
             if(response.status === 400){
                 resp.status(400);
-                resp.json({error: "Status not changed"});
+                resp.json({error: "Window state not changed"});
                 return;
             }
             else {
                 resp.status(200);
-                resp.json({result: "Success"});
+                resp.json({result: "Windows state successfully changed"});
                 window.state = state;
                 console.info('Window successfully updated', {window});
             }
@@ -503,6 +501,7 @@ export function routes(app, wss, oidc, config) {
         const {state} = req.body;
         console.log("Attempting to create a new door", {state: state});
         let dto = {state: state};
+
         makeRequest('POST', `http://actuator:8086/door`, dto).then((response) => {
             console.info('Response from actuator:', response.json());
             if(response.status === 400){
@@ -521,11 +520,12 @@ export function routes(app, wss, oidc, config) {
         const {state} = req.body;
         console.log("Attempting to create a new window", {state: state});
         let dto = {state: state};
+
         makeRequest('POST', `http://actuator:8086/window`, dto).then((response) => {
             console.info('Response from actuator:', response.json());
             if(response.status === 400){
                 resp.status(400);
-                resp.json({error: "Door not added"});
+                resp.json({error: "Window not added"});
             }
             else {
                 resp.status(201);
@@ -553,18 +553,20 @@ export function routes(app, wss, oidc, config) {
             return;
         }
         let dto = {state: state, actual: door.state};
+        
         makeRequest('PUT', `http://actuator:8086/door/${encodeURIComponent(id)}`, dto).then((response) => {
             console.log('Response from actuator:', response.json());
             if(response.status === 400){
                 resp.status(400);
-                resp.json({error: "Status not changed"});
+                resp.json({error: "Door state not changed"});
                 return;
             }
             else {
                 resp.status(200);
-                resp.json({result: "Success"});
+                resp.json({result: "Door state successfully changed"});
             }
         });
+
         door.state = state;
         console.info('Door successfully updated', {door});
     });
