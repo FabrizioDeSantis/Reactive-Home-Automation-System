@@ -37,7 +37,7 @@ function configFromEnv() {
   if (process.env.TTL) cfg.timeToLive = parseInt(process.env.TTL, 10);
   if (process.env.DELAY_PROB) cfg.delayProb = parseFloat(process.env.DELAY_PROB);
   if (process.env.ERROR_PROB) cfg.errorProb = parseFloat(process.env.ERROR_PROB);
-  if (process.env.FREQUENCY) cfg.frequency = parseInt(process.env.FREQUENCY, 10);
+  if (process.env.FREQUENCY) cfg.frequency = parseInt(process.env.FREQUENCY, 10);  
   return cfg;
 }
 
@@ -97,7 +97,7 @@ export function parse() {
     frequency: options.frequency,
     delayProb: options.delayProb,
     errorProb: options.errorProb,
-    timeToLive: options.timeToLive
+    timeToLive: options.timeToLive,
   });
 
   assertPort(config.port, program, 2);

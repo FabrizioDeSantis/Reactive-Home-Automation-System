@@ -22,6 +22,7 @@ class ValidationError extends Error {
   }
 }
 
+
 /**
  * A WebSocket handler to deal with window's state subscriptions.
  */
@@ -32,6 +33,7 @@ export class ThermometerHandler extends EventEmitter {
   #timeout;
   #buffer;
   #death;
+  #initTempSent;
 
   /**
    * Instances a new weather handler.
@@ -45,6 +47,7 @@ export class ThermometerHandler extends EventEmitter {
     this.#config = config;
     this.#name = name;
     this.#buffer = [];
+    this.#initTempSent = false;
   }
 
   get name() {
@@ -118,32 +121,36 @@ export class ThermometerHandler extends EventEmitter {
   }
 
 /**
- * Sends the window state message.
+ * Sends the room temperature message.
  * @private
  */
   _sendRoomTemperature(){
     const currTemp = retrieveState();
     const info = retrieveInfo();
+    const maxTemperature = 25;
 
-    const value = actualRoomTemperature(info, currTemp);
-    console.info("Value " + value);
-    updateTemperature(value);
+    const roomTemp = actualRoomTemperature(info, currTemp, maxTemperature);
+
+    if(roomTemp !== currTemp || !this.#initTempSent){
+      this.#initTempSent = true;
+      updateTemperature(roomTemp);
     
-    const msg = {type: 'thermometer', dateTime: DateTime.now().toISO(), value};
+      const msg = {type: 'thermometer', dateTime: DateTime.now().toISO(), roomTemp};
 
-    // message is always appended to the buffer
-    this.#buffer.push(msg);
+      // message is always appended to the buffer
+      this.#buffer.push(msg);
 
-    // messages are dispatched immediately if delays are disabled or a random number is
-    // generated greater than `delayProb` messages
-    if (!this.#config.delays || Math.random() > this.#config.delayProb) {
-      for (const bMsg of this.#buffer) {
-        this._send(bMsg);
+      // messages are dispatched immediately if delays are disabled or a random number is
+      // generated greater than `delayProb` messages
+      if (!this.#config.delays || Math.random() > this.#config.delayProb) {
+        for (const bMsg of this.#buffer) {
+          this._send(bMsg);
+        }
+        this.#buffer = [];
+      } else {
+        console.info(`💤 Due to network delays, ${this.#buffer.length} messages are still queued`, {handler: this.#name});
       }
-      this.#buffer = [];
-    } else {
-      console.info(`💤 Due to network delays, ${this.#buffer.length} messages are still queued`, {handler: this.#name});
-    }
+    }  
   }
 
   /**

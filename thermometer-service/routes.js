@@ -64,8 +64,6 @@ export function updateTemperature(temp) {
   thermometer.temperature = temp;
 }
 
-
-
 /**
  * Registers a new handler for the WS channel.
  * @param ws {WebSocket} The WebSocket client

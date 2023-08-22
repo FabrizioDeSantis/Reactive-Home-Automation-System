@@ -1,7 +1,6 @@
 'use strict';
 
 import util from 'util';
-import {Server} from 'http';
 import {v4 as uuid} from 'uuid';
 import express from 'express';
 import methodOverride from 'method-override';
@@ -77,7 +76,7 @@ async function run() {
 }
 
 run().then(() => {
-  console.info('🏃 Window sensor up and running');
+  console.info('🏃 Thermometer up and running');
 }).catch(err => {
   console.error('💩 Oh shit...', err);
 });
