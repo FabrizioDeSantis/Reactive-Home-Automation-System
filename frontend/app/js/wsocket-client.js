@@ -129,7 +129,7 @@
                 case "thermometer":
                     const infoT = data.value;
                     const [timeT, tempT] = infoT.split('-');
-                    document.getElementById("temperature-room").innerHTML = parseFloat(tempT, 10).toFixed(1) + "°C";
+                    document.getElementById("temperature-room").innerHTML = parseFloat(tempT).toFixed(1) + "°C";
                     // addData(myChartThermometer, timeT, tempT);
                     break;
             }
