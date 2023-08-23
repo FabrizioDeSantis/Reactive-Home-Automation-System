@@ -158,7 +158,7 @@ export class HeatPumpHandler extends EventEmitter {
 
   _simulateError(){
     if (this.#config.failures && Math.random() < this.#config.errorProb) {
-      console.info('🐛 Simulating state change', {handler: this.#name});
+      console.info('🚦 Simulating state change ', {handler: this.#name});
       simulateChanges();
       this._sendState();
       return;

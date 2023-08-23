@@ -83,7 +83,7 @@ async function run() {
 }
 
 run().then(() => {
-  console.info('🏃 Window sensor up and running');
+  console.info('🏃 Heatpump sensor up and running');
 }).catch(err => {
   console.error('💩 Oh shit...', err);
 });

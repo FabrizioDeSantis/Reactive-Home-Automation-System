@@ -1,7 +1,7 @@
 {
-    "name": "window-sensor",
+    "name": "heatpump-sensor",
     "version": "1.0.0",
-    "description": "A microservice that provides info on the state of a window",
+    "description": "A microservice that provides info on the state of a heatpump",
     "main": "server.js",
     "type": "module",
     "scripts": {
