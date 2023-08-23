@@ -29,13 +29,7 @@ function computeRoomTemperature(externalTemperature, windowsStates, doorsStates,
     const temperatureDifference = roomTemperature - externalTemperature;
     
     roomTemperature = Math.min(roomTemperature - temperatureDifference * decrMultiplier + temperatureOp * incrMultiplier, maxTemperature);
-
-    // console.info("Room temperature: " + roomTemperature);
-    // console.info("Max temperature: " + maxTemperature);
-    // console.info("Difference: " + temperatureDifference);
-    // console.info("Ext. temperature: " + externalTemperature);
-    // console.info("Temperature op: " + temperatureOp);
-    
+ 
     return roomTemperature;
 }
 

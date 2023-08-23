@@ -166,7 +166,7 @@ export function routes(app, config) {
     if(!handler.death){
       const {state} = req.body;
       const idRaw = req.params.id;
-      console.debug('Attempting to update window', {id: idRaw, state});
+      console.debug('Attempting to update window ', {id: idRaw, state});
   
       if (!isInteger(idRaw)) {
         resp.status(400);
@@ -179,10 +179,10 @@ export function routes(app, config) {
       window.state = state;
       handler._sendState();
       resp.status(200);
-      resp.json({result: 'Success'});
+      resp.json({result: 'Window state successfully changed'});
     }
     else{
-      console.info("Microservice is down");
+      console.info("❌ Microservice is down");
     }
   });
 
@@ -194,10 +194,10 @@ export function routes(app, config) {
       console.info(window);
       handler._sendState();
       resp.status(201);
-      resp.json({result: "Success"});
+      resp.json({result: "Window successfully created"});
     }
     else{
-      console.info("Microservice is down");
+      console.info("❌ Microservice is down");
     }
   });
 

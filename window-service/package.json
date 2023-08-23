@@ -10,7 +10,7 @@
         "lint": "eslint src",
         "wscat": "wscat -c localhost:8081"
     },
-    "author": "Francesco Invitto",
+    "author": "Fabrizio De Santis",
     "maintainers": [
         "Fabrizio De Santis <fabrizio.desantis@studenti.unipr.it>",
         "Francesco Invitto <francesco.invitto@studenti.unipr.it>"
