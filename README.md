@@ -29,7 +29,7 @@ A **subscribe** message has the following structure:
 ```{"type": "subscribe", "source": "X"}```
 where X represents the microservice subscribing to the backend. Once a subscribe message is received from a microservice, the backend in turn subscribes to the sensor's information sending a message with the same structure to it.
 An **information** message has the following structure:
-```{type: 'X', dateTime: DateTime.now().toISO(), value};```
+```{type: 'X', dateTime: DateTime.now().toISO(), value}```
 where X is the microservice and value contains all the information of the sensor.
 
 ## Actuator
