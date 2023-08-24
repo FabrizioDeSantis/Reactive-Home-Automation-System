@@ -91,7 +91,85 @@ The following table illustrates the available sensors:
 | door-service       | 8083         | It manages the state of a certain number of door sensors   |
 | heat-pump-service  | 8084         | It manages the state of a heatpump, including its operation temperature |
 | thermometer-service| 8085         | It simulates the trend of the room temperature according to the states of the other sensors and the external temperature |
+Main properties of microservices:
+| Property   | Description                                     | Available for        |
+|------------|-------------------------------------------------|----------------------|
+|            |                                                 | 🌦️ | 🚪 | 🪟 | 🌡️ | 🔥 |
+|------------|-------------------------------------------------|----|---|----|----|---|
+| ERROR_PROB | The probability that an error occurs            | ✔  | ✔ | ✔  | ✔  | ✔ |
+| DOWN_PROB  | The probability that the microservice goes down | ✘  | ✔ | ✔  | ✘  | ✔ |
+| DELAY_PROB | The probability that a message will be delayed  | ✔  | ✔ | ✔  | ✔  | ✔ |
+| FREQUENCY  | The frequency of dispatch of messages           | ✔  | ✘ | ✘  | ✔  | ✘ |
 
+### Window service
+It is responsible of managing a certain number of windows, that can vary dynamically.
+Each window is characterized by a numeric id and a state, which can be either "open", "closed" or "error". The microservice keeps track of state changes of the windows due to:
+  - errors: periodically the microservice simulates the possibility of windows going in the "error" state;
+  - requests coming from the frontend (received by the actuator): the user can triggerate the opening or closing of a window.
+
+Furthermore, periodically the microservice simulates the possibility of unavailability. During this period of time, any request is not satisfied.
+
+### Door service
+It is responsible of managing a certain number of doors, that can vary dynamically.
+Each door is characterized by a numeric id and a state, which can be either "open", "closed" or "error". The microservice keeps track of state changes of the doors due to:
+  - errors: periodically the microservice simulates the possibility of doors going in the "error" state;
+  - requests coming from the frontend (received by the actuator): the user can triggerate the opening or closing of a door.
+
+Furthermore, periodically the microservice simulates the possibility of unavailability. During this period of time, any request is not satisfied.
+
+### Heatpump service
+It is responsible of managing a heatpump, that is characterized by a state, which can be either "on", "off" or "error", and a operation temperature, expressed in °C, which must be in the range [0, 60]. The microservice keeps track of state changes of the heatpump due to:
+  - errors: periodically the microservice simulates the possibility of the heatpump going in the "error" state;
+  - requests coming from the frontend (received by the actuator): the user can triggerate the power on or off of the heatpump.
+
+The user can also modify the operation temperature, that of couse must satisfy the constraint mentioned above.
+Furthermore, periodically the microservice simulates the possibility of unavailability. During this period of time, any request is not satisfied.
+
+### Thermometer service
+It is responsible of the simulation of the room temperature according to the states of the other sensors and the weather conditions. The base temperature is set to 20°C.
+The room temperature is computed periodically calling the following function:
+```javascript
+function computeRoomTemperature(externalTemperature, windowsStates, doorsStates, heatPumpState, thermometerTemperature, maxTemperature) {
+
+    let roomTemperature = thermometerTemperature;
+
+    let openWindows = 0, openDoors = 0, temperatureOp = 0;
+    
+    for(let state in windowsStates){
+        if(windowsStates[state]._state === 'open'){
+            openWindows++;
+        }
+    }
+
+    for(let state in doorsStates){
+        if(doorsStates[state]._state === 'open'){
+            openDoors++;
+        }
+    }
+
+    const decrMultiplier = 0.01 * (openWindows + openDoors);
+    const incrMultiplier = 0.01;
+
+    if(heatPumpState != undefined){
+        temperatureOp = heatPumpState._temperatureOp;
+    }
+    if(externalTemperature == null){
+        externalTemperature = 0;
+    }
+
+    const temperatureDifference = roomTemperature - externalTemperature;
+    
+    roomTemperature = Math.min(roomTemperature - temperatureDifference * decrMultiplier + temperatureOp * incrMultiplier, maxTemperature);
+ 
+    return roomTemperature;
+}
+```
+in which open doors and windows play the role of bringing the temperature closer to the external one, while the heatpump is responsible only for increasing the temperature.
+The microservice periodically computes the current room temperature and it sends it to the backend only if the new value is different from the previous one.
+
+### Weather service
+It is responsible of periodically send the information regarding the external temperature.
+For more information consult the documentation at the following link: https://github.com/SOI-Unipr/weather-service.
 
 ## Execution
 Docker must be installed and the engine must be running.
