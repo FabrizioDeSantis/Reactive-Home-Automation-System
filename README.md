@@ -93,14 +93,14 @@ The following table illustrates the available sensors:
 | thermometer-service| 8085         | It simulates the trend of the room temperature according to the states of the other sensors and the external temperature |
 
 Main properties of microservices:
-| Property   | Description                                     | Available for        |
-|------------|-------------------------------------------------|----------------------|
-|            |                                                 | 🌦️ | 🚪 | 🪟 | 🌡️ | 🔥 |
-|------------|-------------------------------------------------|----|---|----|----|---|
-| ERROR_PROB | The probability that an error occurs            | ✔  | ✔ | ✔  | ✔  | ✔ |
-| DOWN_PROB  | The probability that the microservice goes down | ✘  | ✔ | ✔  | ✘  | ✔ |
-| DELAY_PROB | The probability that a message will be delayed  | ✔  | ✔ | ✔  | ✔  | ✔ |
-| FREQUENCY  | The frequency of dispatch of messages           | ✔  | ✘ | ✘  | ✔  | ✘ |
+| Property   | Description                                    | 🌦️ | 🚪 | 🪟 | 🌡️ | 🔥 |
+|------------|------------------------------------------------|----|---|----|----|---|
+|            |                                                |    |   |    |    |   |
+| ERROR_PROB | The probability that an error occurs           | ✔  | ✔ | ✔  | ✔  | ✔ |
+| DOWN_PROB  | The probability that the microservice goes down| ✘  | ✔ | ✔  | ✘  | ✔ |
+| DELAY_PROB | The probability that a message will be delayed | ✔  | ✔ | ✔  | ✔  | ✔ |
+| FREQUENCY  | The frequency of dispatch of messages          | ✔  | ✘ | ✘  | ✔  | ✘ |
+
 
 ### Window service
 It is responsible of managing a certain number of windows, that can vary dynamically.
