@@ -15,7 +15,9 @@ It is used by the user to access to and use the Web application, provided it has
 
 Each sensor has a dedicated component that is dinamically created once the sensor is added. The frontend is connected to the backend via Web Socket, from which it receives sensors' information and to which it forwards commands.
 When the user connects to the url provided above, the frontend sends the following JSON message to the backend:
-```{"type": "subscribe", "source": "client"}```
+```javascript
+{"type": "subscribe", "source": "client"}
+```
 indicating to the backend that is intends subscribing to the sensors' information. Once the frontend is subscribed to the backend, it will receive new information when it is available. When an error occurs, a pop up message explaining the error appears.
 
 ## Backend
@@ -26,10 +28,14 @@ It receives two types of messages:
   - informational.
 
 A **subscribe** message has the following structure:
-```{"type": "subscribe", "source": "X"}```
+```javascript
+{"type": "subscribe", "source": "X"}
+```
 where X represents the microservice subscribing to the backend. Once a subscribe message is received from a microservice, the backend in turn subscribes to the sensor's information sending a message with the same structure to it.
 An **information** message has the following structure:
-```{type: 'X', dateTime: DateTime.now().toISO(), value}```
+```javascript
+{type: 'X', dateTime: DateTime.now().toISO(), value}
+```
 where X is the microservice and value contains all the information of the sensor.
 
 ## Actuator
@@ -66,9 +72,13 @@ The outcome of a request is communicated to the backend and it can be either:
   - a **success**.
 
 An error message has the following structure:
-```{error: "X"}```
+```javascript
+{error: "X"}
+```
 while a success message is formed as:
-```{result: "X"}```
+```javascript
+{result: "X"}
+```
 In both cases X represents the message describing the error or the successful result; furthermore a status code is sent with the response too.
 
 ## Sensors
@@ -86,5 +96,7 @@ The following table illustrates the available sensors:
 ## Execution
 Docker must be installed and the engine must be running.
 A single instruction is necessary:
-```docker-compose up --build```
+```console
+docker-compose up --build
+```
 launched in the main folder.
