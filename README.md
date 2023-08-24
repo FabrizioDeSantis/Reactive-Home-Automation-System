@@ -91,6 +91,7 @@ The following table illustrates the available sensors:
 | door-service       | 8083         | It manages the state of a certain number of door sensors   |
 | heat-pump-service  | 8084         | It manages the state of a heatpump, including its operation temperature |
 | thermometer-service| 8085         | It simulates the trend of the room temperature according to the states of the other sensors and the external temperature |
+
 Main properties of microservices:
 | Property   | Description                                     | Available for        |
 |------------|-------------------------------------------------|----------------------|
