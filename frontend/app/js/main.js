@@ -2,7 +2,7 @@
 
 (async function () {
   const client = new RestClient('/api');
-  const wsclient = new WSClient();
+  const wsclient = new WSClient('/ws');
   const root = document.querySelector('#info');
   const rootDoor = document.querySelector('#info-door');
   const rootPump = document.querySelector('#info-pump');
@@ -56,3 +56,4 @@
   console.info('🏁 Application initialized');
 
 })();
+

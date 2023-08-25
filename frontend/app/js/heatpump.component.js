@@ -115,7 +115,7 @@
     async restart() {
       console.debug("Attempting to restart the heat pump");
       try{
-        await this.#model.update("restart");
+        await this.#model.updateState("restart");
       }catch(e) {
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");

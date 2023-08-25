@@ -54,9 +54,18 @@
       stat.id = `door-${this.#model.id}`;
       h3.innerHTML = `Door ${this.#model.id}`;
         
+      let elementChart = document.createElement("div");
+      elementChart.className = "chartBox";
+      elementChart.innerHTML = document.querySelector('script#doors-chart-template').textContent;
+      const span = elementChart.querySelector('#chartDoor');
+      span.id = `chartDoor-${this.#model.id}`;
+      
       const root = document.querySelector('#insights');
-        
+      const rootCharts = document.querySelector('#charts');
+
       root.appendChild(element2);
+      rootCharts.appendChild(elementChart);
+      this.createChart();
 
       const doorNumber = this.#element.querySelector("#command-header");
       doorNumber.innerHTML = `Door ${this.#model.id} - ${doorNumber.innerHTML}`;
@@ -75,6 +84,53 @@
       this.#handlers.push(hdlrRestart);
 
       return this.#element;
+    }
+
+    createChart() {
+      var yLabels = {0: "error", 1: "closed", 2: "open"};
+      const configDoors = {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: `Door ${this.#model.id} States`,
+            data: [],
+            borderColor: "#363949",
+            borderWidth: 3,
+            tension: 0.1,
+            fill: false
+          }
+          ]
+        },
+        options: {
+            responsive: true,
+            aspectRatio: 1,
+            interaction: {
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    display: true,
+                    title: {
+                    display: true,
+                    text: 'Value'
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 2,
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value, index, values) {
+                            return yLabels[value];
+                        }
+                    }
+                }
+            }
+        }
+      };
+      const myChartDoors = new Chart(
+        document.getElementById(`chartDoor-${this.#model.id}`),
+        configDoors
+      );
     }
 
     async open() {

@@ -122,9 +122,7 @@
                 <!-- END OF INSIGHTS -->
                 <div class="graphs">
                     <h2>History</h2>
-                    <div class="canvas">
-                        <!-- <button class="control_prev" type="button"><span class="material-symbols-outlined">chevron_left</span></button>
-                        <button class="control_next" type="button"><span class="material-symbols-outlined">chevron_right</span></button> -->
+                    <div class="canvas" id="charts">
                         <div class="chartBox">
                             <canvas id="chartWeather"></canvas>
                         </div>
@@ -134,6 +132,15 @@
                         <div class="chartBox">
                             <canvas id="chartHeatPump"></canvas>
                         </div>
+                        <div class="chartBox">
+                            <canvas id="chartHeatPumpState"></canvas>
+                        </div>
+                        <script type="text/html" id="doors-chart-template">
+                            <canvas id="chartDoor"></canvas>
+                        </script>
+                        <script type="text/html" id="windows-chart-template">
+                            <canvas id="chartWindow"></canvas>
+                        </script>
                     </div>
                     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.1.1/chartjs-plugin-zoom.min.js"></script>

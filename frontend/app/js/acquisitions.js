@@ -1,8 +1,9 @@
-const ctx = document.getElementById('acquisitions');
+const datapoints2 = [0, 0, 2, 0, 1, 0];
 const labels = [];
 for (let i = 0; i < 12; ++i) {
   labels.push(i.toString());
 }
+var yLabels = {0: "error", 1: "off", 2: "on"};
 
 // Weather chart
 
@@ -95,7 +96,7 @@ const myChartThermometer = new Chart(
 // Heat Pump
 
 const dataHeatPump = {
-    labels: labels,
+    labels: [],
     datasets: [{
         label: 'Temperature Heat Pump (°C)',
         data: [],
@@ -134,6 +135,54 @@ const configHeatPump = {
 const myChartHeatPump = new Chart(
     document.getElementById('chartHeatPump'),
     configHeatPump
+);
+
+const dataHeatPumpState = {
+    labels: [],
+    datasets: [{
+        label: 'Heat Pump States',
+        data: datapoints2,
+        borderColor: "rgb(75, 192, 192)",
+        borderWidth: 3,
+        tension: 0.1,
+        fill: false
+        }]
+};
+
+// config 
+const configHeatPumpState = {
+    type: 'line',
+    data: dataHeatPumpState,
+    options: {
+        responsive: true,
+        aspectRatio: 1,
+        interaction: {
+            intersect: false,
+        },
+        scales: {
+            y: {
+                display: true,
+                title: {
+                display: true,
+                text: 'Value'
+                },
+                suggestedMin: 0,
+                suggestedMax: 2,
+                ticks: {
+                    beginAtZero: true,
+                    callback: function(value, index, values) {
+                        return yLabels[value];
+                    }
+                }
+            }
+        }
+    }
+  };
+
+  // render init block
+const myChartHeatPumpState = new Chart(
+    document.getElementById('chartHeatPumpState'),
+    configHeatPumpState
 );
 
 export function addData(chart, label, newData) {

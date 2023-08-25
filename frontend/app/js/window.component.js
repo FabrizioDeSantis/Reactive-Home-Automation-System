@@ -54,9 +54,18 @@
         stat.id = `window-${this.#model.id}`;
         h3.innerHTML = `Window ${this.#model.id}`;
         
+        let elementChart = document.createElement("div");
+        elementChart.className = "chartBox";
+        elementChart.innerHTML = document.querySelector('script#windows-chart-template').textContent;
+        const span = elementChart.querySelector('#chartWindow');
+        span.id = `chartWindow-${this.#model.id}`;
+
         const root = document.querySelector('#insights');
+        const rootCharts = document.querySelector('#charts');
         
         root.appendChild(element2);
+        rootCharts.appendChild(elementChart);
+        this.createChart();
 
         const windowNumber = this.#element.querySelector("#command-header");
         windowNumber.innerHTML = `Window ${this.#model.id} - ${windowNumber.innerHTML}`;
@@ -75,6 +84,53 @@
         this.#handlers.push(hdlrRestart);
 
         return this.#element;
+    }
+
+    createChart() {
+      var yLabels = {0: "error", 1: "closed", 2: "open"};
+      const configWindows = {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: `Window ${this.#model.id} States`,
+            data: [],
+            borderColor: "#363949",
+            borderWidth: 3,
+            tension: 0.1,
+            fill: false
+          }
+          ]
+        },
+        options: {
+            responsive: true,
+            aspectRatio: 1,
+            interaction: {
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    display: true,
+                    title: {
+                    display: true,
+                    text: 'Value'
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 2,
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value, index, values) {
+                            return yLabels[value];
+                        }
+                    }
+                }
+            }
+        }
+      };
+      const myChartWindows = new Chart(
+        document.getElementById(`chartWindow-${this.#model.id}`),
+        configWindows
+      );
     }
 
     async open() {
