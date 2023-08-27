@@ -178,3 +178,8 @@ A single instruction is necessary:
 docker-compose up --build
 ```
 launched in the main folder.
+A feature of the system is its capacity of recovering its correct functioning even after a restart of the backend. The restart of the backend can be triggered using the Docker command:
+```console
+docker-compose restart server
+```
+The microservices and the frontend will notice the closing of the WS connection with the backend and they will retry reconnecting to it.
