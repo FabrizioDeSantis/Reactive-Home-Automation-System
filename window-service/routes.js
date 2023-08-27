@@ -82,7 +82,7 @@ export function simulateChanges(){
  * @param ws {WebSocket} The WebSocket client
  * @param handler {WeatherHandler} The WebSocket handler
  */
-function registerHandler(ws, handler) {
+function registerHandler(app, config, ws, handler) {
 
   const removeAllListeners = () => {
     ws.removeListener('handler', handlerCb);
@@ -108,6 +108,11 @@ function registerHandler(ws, handler) {
     console.info('⛔ WebSocket closed', {handler:handler.name},);
     handler.stop();
     removeAllListeners();
+
+    setTimeout(function(){
+      console.info("Connection to the backend closed. Reconnecting...");
+      routes(app, config);
+    }, 5000);
   }
 
   function errorCb(err) {
@@ -143,23 +148,34 @@ export function routes(app, config) {
     console.info("✅ Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "window"}));
-      handler = new WindowHandler(ws, config, `window:${uuid()}`);
-      registerHandler(ws, handler);
+      
+      if(handler === null){
+        handler = new WindowHandler(ws, config, `window:${uuid()}`);
+      }
+      else{
+        handler.ws = ws;
+      }
+     
+      registerHandler(app, config, ws, handler);
+      
     } catch (e) {
       console.error('💥 Failed to register WS handler, closing connection', e);
       ws.close();
     }
   });
 
-  ws.on("close", () => {
-
-  });
+  // ws.on("close", () => {
+  //   setTimeout(function(){
+  //     console.info("Connection to the backend closed. Reconnecting...");
+  //     routes(app, config);
+  //   }, 5000);
+  // });
 
   ws.on("error", () => {
     setTimeout(function(){
-      console.info("Connection to the backend refused. Reconnecting...");
+      console.info("Connection to the backend failed. Reconnecting...");
       routes(app, config);
-    }, 1000);
+    }, 2000);
   });
 
   app.put('/window/:id', (req, resp) => {

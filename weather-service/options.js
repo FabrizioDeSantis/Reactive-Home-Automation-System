@@ -13,7 +13,7 @@ const IFACE = '0.0.0.0';
 const PORT = 8081;
 const ERROR_PROB = 0.1;
 const DELAY_PROB = 0.2;
-const FREQ_MS = 2000;
+const FREQ_MS = 10000;
 const TTL_SEC = 60;
 
 function assertPort(port, program, excode) {

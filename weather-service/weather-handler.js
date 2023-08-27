@@ -47,6 +47,10 @@ export class WeatherHandler extends EventEmitter {
     return this.#name;
   }
 
+  set ws(ws) {
+    this.#ws = ws;
+  }
+
   /**
    * Handles incoming messages.
    * @param msg {string} An incoming JSON message
@@ -78,7 +82,7 @@ export class WeatherHandler extends EventEmitter {
   }
 
   start() {
-    console.debug('New connection received', {handler: this.#name});
+    console.debug('⭐️ New connection received', {handler: this.#name});
   }
 
   /**
@@ -150,10 +154,12 @@ export class WeatherHandler extends EventEmitter {
 
   _onSubscribe() {
     if (this.#timeout) {
-      return;
+      if(!this.#timeout._destroyed){
+        return;
+      }
     }
 
-    console.debug('🌡  Subscribing to temperature', {handler: this.#name});
+    console.debug('🌦️  Subscribing to weather temperature', {handler: this.#name});
     const callback = () => {
       this._sendTemperature();
       this.#timeout = setTimeout(callback, this._someMillis());

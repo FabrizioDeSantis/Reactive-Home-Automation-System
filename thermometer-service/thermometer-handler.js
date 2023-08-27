@@ -54,6 +54,10 @@ export class ThermometerHandler extends EventEmitter {
     return this.#name;
   }
 
+  set ws(ws) {
+    this.#ws = ws;
+  }
+
   /**
    * Handles incoming messages.
    * @param msg {string} An incoming JSON message
@@ -86,7 +90,7 @@ export class ThermometerHandler extends EventEmitter {
   }
 
   start() {
-    console.debug('New connection received', {handler: this.#name});
+    console.debug('⭐️ New connection received', {handler: this.#name});
   }
 
   /**
@@ -170,7 +174,9 @@ export class ThermometerHandler extends EventEmitter {
 
   _onSubscribe() {
     if (this.#timeout) {
-      return;
+      if(!this.#timeout._destroyed){
+        return;
+      }
     }
 
     console.debug('🌡️ Subscribing to room temperature', {handler: this.#name});

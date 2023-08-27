@@ -68,9 +68,11 @@ const services = new Map();
 const windows = [];
 const doors = [];
 const temperatures = [];
+const temperaturesThermometer = [];
+const tempAndDatesHeatPump = [];
 const clients = new Map();
 const temperaturesAndDates = [];
-const temperaturesAndDatesT = new Map();
+const tempAndDatesThermometer = [];
 let heatPump = null;
 
 function toDTOWindow(window) {
@@ -106,6 +108,32 @@ function isInteger(n) {
     return false;
 }
 
+function retrieveDate(dateRaw){
+    let completeDate = new Date(dateRaw);
+
+    let hours = completeDate.getHours();
+    let minutes = completeDate.getMinutes();
+    let seconds = completeDate.getSeconds();
+
+    let year = completeDate.getFullYear();
+    let month = completeDate.getMonth() + 1;
+    let day = completeDate.getDate();
+
+    let time = `${hours}:${minutes}:${seconds}`;
+    let date = `${day}-${month}-${year}`;
+    if(month.toString().length == 1){
+        month = "0" + month;
+    }
+    if(day.toString().length == 1){
+        day = "0" + day;
+    }
+
+    time = `${hours}:${minutes}:${seconds}`;
+    date = `${year}-${month}-${day}`;
+
+    return {time: time, date: date};
+}
+
 async function makeRequest(type, url, data) {
     try {
       const response = await fetch(url, {
@@ -134,6 +162,8 @@ function sendAllData(){
             keyWS.send(JSON.stringify({"type": "windows", "value": windowsStates}));
             keyWS.send(JSON.stringify({"type": "temperature", "value": temperatures[temperatures.length-1]}));
             keyWS.send(JSON.stringify({"type": "temperatures", "value": temperaturesAndDates}));
+            keyWS.send(JSON.stringify({"type": "thermometer", "value": tempAndDatesThermometer[tempAndDatesThermometer.length-1]}));
+            keyWS.send(JSON.stringify({"type": "heatpump", "value": tempAndDatesHeatPump[tempAndDatesHeatPump.length-1]}));
             keyWS.send(JSON.stringify({"type": "doors", "value": doorsStates}));
         }
     } 
@@ -154,6 +184,7 @@ export function routes(app, wss, oidc, config) {
         try {
           const data = JSON.parse(message);
           let hours = null, minutes = null, seconds = null, day = null, month = null, year = null, time = null, date = null, temp = null, completeDate = null;
+          let resultDate = null;
           let combinedInfo = null;
           switch(data.type){
             case "subscribe":
@@ -204,32 +235,19 @@ export function routes(app, wss, oidc, config) {
             case "temperature":
                 console.info("New temperature received from the weather microservice: " + data.value);
                 temp = data.value;
-                completeDate = new Date(data.dateTime);
-
-                console.log(completeDate);
-
-                hours = completeDate.getHours();
-                minutes = completeDate.getMinutes();
-                seconds = completeDate.getSeconds();
-
-                year = completeDate.getFullYear();
-                month = completeDate.getMonth() + 1;
-                day = completeDate.getDate();
-
-                time = `${hours}:${minutes}:${seconds}`;
-                date = `${day}-${month}-${year}`;
+                resultDate = retrieveDate(data.dateTime);
 
                 console.info("New temperature received from the weather microservice: " + temp);
-                console.info("Combined time: " + time);
-                console.info("Combined date: " + date);
+                console.info("Combined time: " + resultDate.time);
+                console.info("Combined date: " + resultDate.date);
 
                 temperatures.push(data.value);
 
                 services.set("weather", data.value);
                 
-                temperaturesAndDates.push([time, temp]);
+                temperaturesAndDates.push([resultDate.time, temp]);
 
-                combinedInfo = `${time}/${date}/${temp}`;
+                combinedInfo = `${resultDate.time}/${resultDate.date}/${temp}`;
                 
                 services.set("weather", data.value);
                 for (let [keyWS, value] of clients) {
@@ -252,15 +270,9 @@ export function routes(app, wss, oidc, config) {
                 const windowsIds = data.states.map((window) => window.windowId);
                 const numWindows = windowsStates.length - windows.length;
 
-                // if(windows.length != windowsStates.length){
-                //     for (let i = 0; i < numWindows; i++) {
-                //         windows.push(new Window( windowsIds[i], windowsStates[i]));
-                //     }
-                // }
-
                 if(windows.length != windowsStates.length){
                     for (let i = 0; i < numWindows; i++) {
-                        windows.push(new Window(null, windowsStates[i]));
+                        windows.push(new Window(null, null));
                     }
                 }
 
@@ -284,10 +296,11 @@ export function routes(app, wss, oidc, config) {
             case "doors":
                 const doorsStates = data.states.map((door) => door.state);
                 const doorIds = data.states.map((door) => door.doorId);
+                const numDoors = doorsStates.length - doors.length;
 
                 if(doors.length != doorsStates.length){
-                    for (let i = 0; i < (doorsStates.length - doors.length); i++) {
-                        doors.push(new Door(null, doorsStates[i]));
+                    for (let i = 0; i < numDoors; i++) {
+                        doors.push(new Door(null, null));
                     }
                 }
 
@@ -312,26 +325,14 @@ export function routes(app, wss, oidc, config) {
                 const state = data.value.state;
                 const temperatureOp = parseInt(data.value.temperatureOp, 10);
                 
-                completeDate = new Date(data.dateTime);
-
-                console.log(completeDate);
-
-                hours = completeDate.getHours();
-                minutes = completeDate.getMinutes();
-                seconds = completeDate.getSeconds();
-
-                year = completeDate.getFullYear();
-                month = completeDate.getMonth() + 1;
-                day = completeDate.getDate();
-
-                time = `${hours}:${minutes}:${seconds}`;
-                date = `${day}-${month}-${year}`;
+                resultDate = retrieveDate(data.dateTime);
 
                 console.info("New temperature received from the heatpump microservice: " + temperatureOp);
-                console.info("Combined time heatpump: " + time);
-                console.info("Combined date heatpump: " + date);
+                console.info("Combined time heatpump: " + resultDate.time);
+                console.info("Combined date heatpump: " + resultDate.date);
 
-                combinedInfo = `${time}/${date}/${temperatureOp}/${state}`;
+                combinedInfo = `${resultDate.time}/${resultDate.date}/${temperatureOp}/${state}`;
+                tempAndDatesHeatPump.push(combinedInfo);
 
                 if(heatPump === null){
                     heatPump = new HeatPump(state, temperatureOp);
@@ -354,25 +355,23 @@ export function routes(app, wss, oidc, config) {
             case "thermometer":
                 console.info("New temperature received from the thermometer microservice: " + data.roomTemp);
                 const tempT = data.roomTemp;
-                const completeDateT = new Date(data.dateTime);
+                temperaturesThermometer.push(tempT);
 
-                const hoursT = completeDateT.getHours();
-                const minutesT = completeDateT.getMinutes();
-                const secondsT = completeDateT.getSeconds();
-
-                const timeT = `${hoursT}:${minutesT}:${secondsT}`;
+                resultDate = retrieveDate(data.dateTime);
 
                 console.info("New temperature received from the thermometer microservice: " + tempT);
-                console.info("Combined time: " + timeT);
+                console.info("Combined time: " + resultDate.time);
+                console.info("Combined date: " + resultDate.date);
                 
                 services.set("thermometer", data.roomTemp);
                 
-                temperaturesAndDatesT.set(timeT, tempT);
-                const combinedInfoT = `${timeT}-${tempT}`;
+                combinedInfo = `${resultDate.time}/${resultDate.date}/${tempT}`;
+                tempAndDatesThermometer.push(combinedInfo);
+
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
                         //keyWS.send(JSON.stringify({"type": "thermometer", "value": data.value}));
-                        keyWS.send(JSON.stringify({"type": "thermometer", "value": combinedInfoT}));
+                        keyWS.send(JSON.stringify({"type": "thermometer", "value": combinedInfo}));
                     }
                 }
                 break;

@@ -16,7 +16,7 @@ function computeRoomTemperature(externalTemperature, windowsStates, doorsStates,
         }
     }
 
-    const decrMultiplier = 0.01 * (openWindows + openDoors);
+    const decrMultiplier = 0.05 * (openWindows + openDoors);
     const incrMultiplier = 0.01;
 
     if(heatPumpState != undefined){
