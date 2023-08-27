@@ -71,7 +71,7 @@ export class DoorHandler extends EventEmitter {
 
     // @formatter:off
     switch (json.type) {
-      case 'subscribe': console.info("Ricevuta subscribe"); this._onSubscribe(); break;
+      case 'subscribe': this._onSubscribe(); break;
       case 'unsubscribe': this._onUnsubscribe(); break;
     }
     // @formatter:on
@@ -174,8 +174,6 @@ export class DoorHandler extends EventEmitter {
   }
 
   _onSubscribe() {
-    console.info(this.#timeout);
-
     if (this.#timeout) {
       if(!this.#timeout._destroyed){
         return;
