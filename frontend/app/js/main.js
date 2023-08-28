@@ -32,11 +32,13 @@
       }
       subscription = null;
       components.forEach(c => c.destroy());
+
       /** Definition weather component */
       const modelWeather = new RestWeatherModel(client);
       comp_weather = new WeatherComponent(modelWeather);
       elem_weather = await comp_weather.init();
       components.push(comp_weather);
+      
       /** Definition thermometer component */
       const modelThermometer = new RestThermometerModel(client);
       comp_thermometer = new ThermometerComponent(modelThermometer);

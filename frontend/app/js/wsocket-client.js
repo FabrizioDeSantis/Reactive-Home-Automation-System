@@ -265,31 +265,87 @@
         };
     }
 
-    class WSClient{
-        /**
-         * Instances a new `WebSocket Client`.
-         * @param baseUrl {string?} Optional baseUrl (in questo caso è /ws)
-         */
+    function reconnect(wsUrl){
+        const ws = new WebSocket(wsUrl);
+
+        return ws;
+    }
+
+    // class WSClient{
+    //     /**
+    //      * Instances a new `WebSocket Client`.
+    //      * @param baseUrl {string?} Optional baseUrl (in questo caso è /ws)
+    //      */
+    //     constructor(baseUrl) {
+    //         this._baseUrl = baseUrl;
+    //     }
+
+    //     async init(){
+    //         const url = document.baseURI.replace(/^http/, 'ws');
+    //         const wsUrl = new URL(this._baseUrl + "/", url);
+    //         //let ws = new WebSocket(wsUrl);
+    //         let ws;
+
+    //         const callbackConnect = () => {
+    //             console.log("CALLBACK");
+    //             ws = new WebSocket(wsUrl);
+    //         };
+
+    //         callbackConnect();
+            
+    //         ws.onopen = function() {
+    //             ws.send(JSON.stringify({"type": "subscribe", "source": "client"}));
+    //         };
+
+	// 		ws.onclose = function() {
+    //             setTimeout(function(){
+    //                 console.info("Connection to the backend closed. Reconnecting...");
+    //                 //init();
+    //                 //ws = new WebSocket(wsUrl);
+    //                 callbackConnect();
+    //               }, 5000);
+    //         }
+    //         routes(ws);
+    //     }
+    // }
+
+    class WSClient {
         constructor(baseUrl) {
             this._baseUrl = baseUrl;
+            this._ws = null;
+            this._isConnected = false;
         }
-        async init(){
+    
+        createWebSocket() {
             const url = document.baseURI.replace(/^http/, 'ws');
             const wsUrl = new URL(this._baseUrl + "/", url);
-            const ws = new WebSocket(wsUrl);
-            
-            ws.onopen = function() {
-                ws.send(JSON.stringify({"type": "subscribe", "source": "client"}));
+            this._ws = new WebSocket(wsUrl);
+            this._isConnected = true;
+    
+            this._ws.onopen = () => {
+                console.info("✅ Connected to backend");
+                this._ws.send(JSON.stringify({"type": "subscribe", "source": "client"}));
             };
-			ws.onclose = function() {
-                setTimeout(function(){
-                    console.info("Connection to the backend closed. Reconnecting...");
-                    init();
-                  }, 5000);
-            }
-            routes(ws);
+    
+            this._ws.onclose = () => {
+                if (this._isConnected) {
+                    console.info("⛔️ Connection to the backend closed. Reconnecting...");
+                    this._isConnected = false;
+                    
+                    setTimeout(() => {
+                        this.createWebSocket();
+                    }, 5000);
+                }
+            };
+    
+            routes(this._ws);
+        }
+    
+        async init() {
+            this.createWebSocket();
         }
     }
+    
 
     win.WSClient ||= WSClient;
 
