@@ -234,7 +234,7 @@
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. Window service is down.";
+          errorMessage.innerHTML = "Request timed out: heat pump service is down.";
         }
         else{
           errorMessage.innerHTML = "Error.";
@@ -244,17 +244,17 @@
     }
 
     async turnOn() {
-      console.debug("Attempting to turn on the heatpump");
+      console.debug("Attempting to turn on the heat pump");
       try{
         await this.#model.updateState("on");
       }catch(e){
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. HeatPump service is down.";
+          errorMessage.innerHTML = "Request timed out: heat pump service is down.";
         }
         else{
-          errorMessage.innerHTML = "Error. HeatPump already on or is in error.";
+          errorMessage.innerHTML = "Heat pump already on or is in error.";
         }
         section.classList.add("active");
       }
@@ -268,10 +268,10 @@
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. Window service is down.";
+          errorMessage.innerHTML = "Request timed out: heat pump service is down.";
         }
         else{
-          errorMessage.innerHTML = "Error. HeatPump already off or is in error.";
+          errorMessage.innerHTML = "Heat pump already off or is in error.";
         }
         section.classList.add("active");
       }
@@ -286,10 +286,10 @@
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. HeatPump service is down.";
+          errorMessage.innerHTML = "Request timed out: heat pump service is down.";
         }
         else{
-          errorMessage.innerHTML = "Error. HeatPump is off or the temperature is too high.";
+          errorMessage.innerHTML = "Heat pump off, heat pump in error or temperature out of range (0-60°C).";
         }
         section.classList.add("active");
       }
@@ -303,10 +303,10 @@
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. HeatPump service is down.";
+          errorMessage.innerHTML = "Request timed out: heat pump service is down.";
         }
         else{
-          errorMessage.innerHTML = "Error. HeatPump is in error.";
+          errorMessage.innerHTML = "Unable to restart heat pump sensor.";
         }
         section.classList.add("active");
       }

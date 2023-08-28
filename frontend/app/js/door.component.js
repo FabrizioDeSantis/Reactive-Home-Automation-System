@@ -201,10 +201,10 @@
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. Door service is down.";
+          errorMessage.innerHTML = "Request timed out: door service is down.";
         }
         else{
-          errorMessage.innerHTML = "Error. Door already open or is in error.";
+          errorMessage.innerHTML = "Door already open or is in error.";
         }
         section.classList.add("active");
       }
@@ -219,10 +219,10 @@
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. Door service is down.";
+          errorMessage.innerHTML = "Request timed out: door service is down.";
         }
         else{
-          errorMessage.innerHTML = "Error. Door already closed or is in error.";
+          errorMessage.innerHTML = "Door already closed or is in error.";
         }
         section.classList.add("active");
       }
@@ -237,10 +237,10 @@
         const errorMessage = document.querySelector("#error-message");
         section.classList.add("active");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. Door service is down.";
+          errorMessage.innerHTML = "Request timed out: door service is down.";
         }
         else{
-          errorMessage.innerHTML = "Error.";
+          errorMessage.innerHTML = "Unable to restart door sensor.";
         }
         section.classList.add("active");
       }
@@ -248,7 +248,20 @@
 
     async newDoor() {
       console.debug("Attempting to create new door");
-      await this.#model.create();
+      try{
+        await this.#model.create();
+      }catch(e){
+        const section = document.querySelector("section");
+        const errorMessage = document.querySelector("#error-message");
+        section.classList.add("active");
+        if(e.status == 408){
+          errorMessage.innerHTML = "Request timed out: door service is down.";
+        }
+        else{
+          errorMessage.innerHTML = "Unable to add new door sensor.";
+        }
+        section.classList.add("active");
+      }
     }
 
   }

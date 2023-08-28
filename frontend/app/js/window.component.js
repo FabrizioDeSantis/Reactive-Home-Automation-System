@@ -199,10 +199,10 @@
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. Window service is down.";
+          errorMessage.innerHTML = "Request timed out: window service is down.";
         }
         else{
-          errorMessage.innerHTML = "Error. Window already open or is in error.";
+          errorMessage.innerHTML = "Window already open or is in error.";
         }
         section.classList.add("active");
       }
@@ -217,10 +217,10 @@
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. Window service is down.";
+          errorMessage.innerHTML = "Request timed out: window service is down.";
         }
         else{
-          errorMessage.innerHTML = "Error. Window already closed or is in error.";
+          errorMessage.innerHTML = "Window already closed or is in error.";
         }
         section.classList.add("active");
       }
@@ -234,10 +234,28 @@
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out. Window service is down.";
+          errorMessage.innerHTML = "Request timed out: window service is down.";
         }
         else{
-          errorMessage.innerHTML = "Error.";
+          errorMessage.innerHTML = "Unable to restart window sensor.";
+        }
+        section.classList.add("active");
+      }
+    }
+
+    async newWindow() {
+      console.debug("Attempting to create new window");
+      try{
+        await this.#model.create();
+      }catch(e){
+        const section = document.querySelector("section");
+        const errorMessage = document.querySelector("#error-message");
+        section.classList.add("active");
+        if(e.status == 408){
+          errorMessage.innerHTML = "Request timed out: window service is down.";
+        }
+        else{
+          errorMessage.innerHTML = "Unable to add new window sensor.";
         }
         section.classList.add("active");
       }
