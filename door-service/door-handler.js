@@ -154,7 +154,7 @@ export class DoorHandler extends EventEmitter {
   }
 
   _simulateError(){
-    if (this.#config.failures && Math.random() < this.#config.errorProb) {
+    if (this.#config.failures && Math.random() < this.#config.errorProb && !this.#death) {
       console.info('🚦 Simulating state change', {handler: this.#name});
       simulateChanges();
       this._sendState();
@@ -191,7 +191,7 @@ export class DoorHandler extends EventEmitter {
 
     const callbackDownTime = () => {
       this._simulateDowntime();
-      setTimeout(callbackDownTime, this._someMillis());
+      setTimeout(callbackDownTime, 2.0 * this._someMillis());
     };
     setTimeout(callbackDownTime, 0);
   }

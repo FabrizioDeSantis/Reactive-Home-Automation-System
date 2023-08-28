@@ -14,7 +14,7 @@ const PORT = 8083;
 const ERROR_PROB = 0.2;
 const DELAY_PROB = 0;
 const DOWN_PROB = 0.2;
-const FREQ_MS = 10000;
+const FREQ_MS = 5000;
 const TTL_SEC = 60;
 
 function assertPort(port, program, excode) {

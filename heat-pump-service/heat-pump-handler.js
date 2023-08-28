@@ -48,6 +48,10 @@ export class HeatPumpHandler extends EventEmitter {
     return this.#name;
   }
 
+  get death() {
+    return this.#death;
+  }
+
   set ws(ws) {
     this.#ws = ws;
   }
@@ -116,7 +120,7 @@ export class HeatPumpHandler extends EventEmitter {
   }
 
 /**
- * Sends the window state message.
+ * Sends the heatpump state message.
  */
   _sendState(){
     const value = retrieveState();
@@ -151,7 +155,7 @@ export class HeatPumpHandler extends EventEmitter {
   }
 
   _simulateError(){
-    if (this.#config.failures && Math.random() < this.#config.errorProb) {
+    if (this.#config.failures && Math.random() < this.#config.errorProb && !this.#death) {
       console.info('🚦 Simulating state change ', {handler: this.#name});
       simulateChanges();
       this._sendState();
@@ -188,7 +192,7 @@ export class HeatPumpHandler extends EventEmitter {
 
     const callbackDownTime = () => {
       this._simulateDowntime();
-      setTimeout(callbackDownTime, this._someMillis());
+      setTimeout(callbackDownTime, 2.0 * this._someMillis());
     };
     setTimeout(callbackDownTime, 0);
   }
