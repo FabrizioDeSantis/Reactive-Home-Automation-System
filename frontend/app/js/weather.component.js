@@ -118,28 +118,15 @@
         }
         const startDate = document.getElementById("startDate");
         const endDate = document.getElementById("endDate");
-
-        let indexStart = labels2.indexOf(startDate.value);
-        let indexEnd = labels2.lastIndexOf(endDate.value);
-
-        if(!(indexStart == -1 && indexEnd == -1)){
-            if(indexStart == -1){
-                indexStart = 0;
-            }
-            if(indexEnd == -1){
-                indexEnd = labels2.length;
-            }
-        }
-
-        const filterDate = labels.slice(indexStart, indexEnd + 1);
         
-        chart.data.labels = filterDate;
+        const filteredDates = labels2.filter((date, index) => date >= startDate.value && date <= endDate.value);
+        const filteredValues = filteredDates.map((_, index) => values[index]);
+        const filteredDatesVis = filteredDates.map((_, index) => labels[index]);
         
-        const datapoints2 = [...values];
-        const filterDataPoints = datapoints2.slice(indexStart, indexEnd + 1);
-        
-        chart.data.datasets[0].data = filterDataPoints;
+        chart.data.labels = filteredDatesVis;
+        chart.data.datasets[0].data = filteredValues;
         chart.update();
+
       }catch(e){
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");

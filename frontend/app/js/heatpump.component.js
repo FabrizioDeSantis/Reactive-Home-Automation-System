@@ -201,32 +201,18 @@
         const startDate = document.getElementById("startDate");
         const endDate = document.getElementById("endDate");
 
-        let indexStart = labels2.indexOf(startDate.value);
-        let indexEnd = labels2.lastIndexOf(endDate.value);
+        const filteredDates = labels2.filter((date, index) => date >= startDate.value && date <= endDate.value);
+        const filteredStateValues = filteredDates.map((_, index) => values[index]);
+        const filteredTempValues = filteredDates.map((_, index) => temperatures[index]);
+        const filteredDatesTempVis = filteredDates.map((_, index) => labels[index]);
+        const filteredDatesStateVis = [...filteredDatesTempVis];
 
-        if(!(indexStart == -1 && indexEnd == -1)){
-          if(indexStart == -1){
-            indexStart = 0;
-          }
-          if(indexEnd == -1){
-            indexEnd = labels2.length;
-          }
-        }
-
-        const filterDate = labels.slice(indexStart, indexEnd + 1);
-        const filterDateTemp = [...filterDate];
+        chartState.data.labels = filteredDatesStateVis;
+        chartTemp.data.labels = filteredDatesTempVis;
         
-        chartState.data.labels = filterDate;
-        chartTemp.data.labels = filterDateTemp;
-        
-        const datapointsState = [...values];
-        const datapointsTemp = [...temperatures];
-        const filterDataPointsState = datapointsState.slice(indexStart, indexEnd + 1);
-        const filterDataPointsTemp = datapointsTemp.slice(indexStart, indexEnd + 1);
-        
-        chartState.data.datasets[0].data = filterDataPointsState;
+        chartState.data.datasets[0].data = filteredStateValues;
         chartState.update();
-        chartTemp.data.datasets[0].data = filterDataPointsTemp;
+        chartTemp.data.datasets[0].data = filteredTempValues;
         chartTemp.update();
         const filterBtn = document.querySelector("#filterDate");
         filterBtn.classList.add("active");
