@@ -28,11 +28,19 @@
         <div class="container">
             <main>
                 <h1>Dashboard</h1>
-                <div class="date">
-                    <input type="date">
+                <div class="date-box">
+                    <div class="date">
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="date">
+                        <input type="date" id="endDate">
+                    </div>
+                    <div id="filterDate" class="customButton">
+                        <span class="material-symbols-outlined" id="filterButton">search</span>
+                    </div>
                 </div>
                 <div class="insights" id="insights">
-                    <div class="weather">
+                    <script type="text/html" id="weather-template">
                         <span class="material-symbols-outlined">partly_cloudy_day</span>
                         <div class="middle">
                             <div class="left">
@@ -41,8 +49,8 @@
                             </div>
                         </div>
                         <small class="text-muted">Today</small>
-                    </div>
-                    <div class="temperature">
+                    </script>
+                    <script type="text/html" id="thermometer-template">
                         <div class="icons">
                             <span class="material-symbols-outlined">device_thermostat</span>
                         </div>
@@ -53,7 +61,7 @@
                             </div>
                         </div>
                         <small class="text-muted">Today</small>
-                    </div>
+                    </script>
                     <script type="text/html" id="heatpump-template">
                         <div class="heatpump">
                             <div class="icons">
@@ -123,18 +131,18 @@
                 <div class="graphs">
                     <h2>History</h2>
                     <div class="canvas" id="charts">
-                        <div class="chartBox">
+                        <script type="text/html" id="weather-chart-template">
                             <canvas id="chartWeather"></canvas>
-                        </div>
-                        <div class="chartBox">
+                        </script>
+                        <script type="text/html" id="thermometer-chart-template">
                             <canvas id="chartThermometer"></canvas>
-                        </div>
-                        <div class="chartBox">
+                        </script>
+                        <script type="text/html" id="heatpump-chart-template">
                             <canvas id="chartHeatPump"></canvas>
-                        </div>
-                        <div class="chartBox">
+                        </script>
+                        <script type="text/html" id="heatpumpstate-chart-template">
                             <canvas id="chartHeatPumpState"></canvas>
-                        </div>
+                        </script>
                         <script type="text/html" id="doors-chart-template">
                             <canvas id="chartDoor"></canvas>
                         </script>
@@ -144,13 +152,12 @@
                     </div>
                     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.1.1/chartjs-plugin-zoom.min.js"></script>
-                    <script type="module" src="js/acquisitions.js"></script>
                 </div>
             </main>
         </div>
         <div class="container-right">
             <div class="right">
-                <div class="top" id="prova">
+                <div class="top" id="login-container">
                     <div class="theme-toggler">
                         <span class="material-symbols-outlined active">light_mode</span>
                         <span class="material-symbols-outlined">dark_mode</span>
@@ -158,6 +165,7 @@
                     <script type="text/html" id="login-template">
                         <div class="profile">
                             <div id="login-button" class="customGPlusSignIn">
+                                <span class="icon"><img class="manImg" src="img/7611770.jpg"></span>
                                 <span class="buttonText">Sign in with Google</span>
                             </div>
                         </div>
@@ -263,6 +271,8 @@
     <script src="js/plugins.js"></script>
     <script src="js/commons.js"></script>
     <script src="js/rest-client.js"></script>
+    <script src="js/model-weather.js"></script>
+    <script src="js/model-thermometer.js"></script>
     <script src="js/models-door.js"></script>
     <script src="js/models-window.js"></script>
     <script src="js/models-heatpump.js"></script>
@@ -273,6 +283,8 @@
     <script src="js/doors.component.js"></script>
     <script src="js/heatpump.component.js"></script>
     <script src="js/heatpumps.component.js"></script>
+    <script src="js/weather.component.js"></script>
+    <script src="js/thermometer.component.js"></script>
     <script src="js/wsocket-client.js"></script>
     <script src="js/main.js"></script>
     

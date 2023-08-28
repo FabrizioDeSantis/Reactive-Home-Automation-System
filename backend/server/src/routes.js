@@ -68,10 +68,19 @@ const services = new Map();
 const windows = [];
 const doors = [];
 const temperatures = [];
+const heatpumpInformations = [];
+const stateAndDatesDoors = [];
+const stateAndDatesWindows = [];
 const clients = new Map();
-const temperaturesAndDates = [];
-const temperaturesAndDatesT = new Map();
+const temperaturesAndDatesWeather = [];
+const tempAndDatesThermometer = [];
 let heatPump = null;
+/////
+const windowsMap = new Map();
+const doorsMap = new Map();
+
+// windowsMap.set(1, [{date: "2023-08-25", time:"12:00:00", state: "open"}]);
+/////
 
 function toDTOWindow(window) {
     return {
@@ -106,6 +115,32 @@ function isInteger(n) {
     return false;
 }
 
+function retrieveDate(dateRaw){
+    let completeDate = new Date(dateRaw);
+
+    let hours = completeDate.getHours();
+    let minutes = completeDate.getMinutes();
+    let seconds = completeDate.getSeconds();
+
+    let year = completeDate.getFullYear();
+    let month = completeDate.getMonth() + 1;
+    let day = completeDate.getDate();
+
+    let time = `${hours}:${minutes}:${seconds}`;
+    let date = `${day}-${month}-${year}`;
+    if(month.toString().length == 1){
+        month = "0" + month;
+    }
+    if(day.toString().length == 1){
+        day = "0" + day;
+    }
+
+    time = `${hours}:${minutes}:${seconds}`;
+    date = `${year}-${month}-${day}`;
+
+    return {time: time, date: date};
+}
+
 async function makeRequest(type, url, data) {
     try {
       const response = await fetch(url, {
@@ -124,17 +159,18 @@ async function makeRequest(type, url, data) {
 }
 
 function sendAllData(){
-    const windowsStates = windows.map((window) => window.state);
-    const doorsStates = doors.map((door) => door.state);
+    // const windowsStates = windows.map((window) => window.state);
+    // const doorsStates = doors.map((door) => door.state);
 
     for (let [keyWS, value] of clients) {
         if(value == "client"){
             console.log("Sending all data to frontend");
 
-            keyWS.send(JSON.stringify({"type": "windows", "value": windowsStates}));
-            keyWS.send(JSON.stringify({"type": "temperature", "value": temperatures[temperatures.length-1]}));
-            keyWS.send(JSON.stringify({"type": "temperatures", "value": temperaturesAndDates}));
-            keyWS.send(JSON.stringify({"type": "doors", "value": doorsStates}));
+            keyWS.send(JSON.stringify({"type": "windows", "value": stateAndDatesWindows[stateAndDatesWindows.length-1]}));
+            keyWS.send(JSON.stringify({"type": "temperature", "value": temperaturesAndDatesWeather[temperaturesAndDatesWeather.length-1]}));
+            keyWS.send(JSON.stringify({"type": "thermometer", "value": tempAndDatesThermometer[tempAndDatesThermometer.length-1]}));
+            keyWS.send(JSON.stringify({"type": "heatpump", "value": heatpumpInformations[heatpumpInformations.length-1]}));
+            keyWS.send(JSON.stringify({"type": "doors", "value": stateAndDatesDoors[stateAndDatesDoors.length-1]}));
         }
     } 
 }
@@ -153,7 +189,8 @@ export function routes(app, wss, oidc, config) {
       ws.on('message', (message) => {
         try {
           const data = JSON.parse(message);
-          let hours = null, minutes = null, seconds = null, day = null, month = null, year = null, time = null, date = null, temp = null, completeDate = null;
+          let temp = null;
+          let resultDate = null;
           let combinedInfo = null;
           switch(data.type){
             case "subscribe":
@@ -204,41 +241,20 @@ export function routes(app, wss, oidc, config) {
             case "temperature":
                 console.info("New temperature received from the weather microservice: " + data.value);
                 temp = data.value;
-                completeDate = new Date(data.dateTime);
-
-                console.log(completeDate);
-
-                hours = completeDate.getHours();
-                minutes = completeDate.getMinutes();
-                seconds = completeDate.getSeconds();
-
-                year = completeDate.getFullYear();
-                month = completeDate.getMonth() + 1;
-                day = completeDate.getDate();
-
-                time = `${hours}:${minutes}:${seconds}`;
-                date = `${day}-${month}-${year}`;
+                resultDate = retrieveDate(data.dateTime);
 
                 console.info("New temperature received from the weather microservice: " + temp);
-                console.info("Combined time: " + time);
-                console.info("Combined date: " + date);
-
-                temperatures.push(data.value);
+                console.info("Combined time: " + resultDate.time);
+                console.info("Combined date: " + resultDate.date);
 
                 services.set("weather", data.value);
-                
-                temperaturesAndDates.push([time, temp]);
 
-                combinedInfo = `${time}/${date}/${temp}`;
+                temperaturesAndDatesWeather.push({date: resultDate.date, time: resultDate.time, temp: temp});
                 
                 services.set("weather", data.value);
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
-                        //keyWS.send(JSON.stringify({"type": "temperature", "value": data.value}));
-                        keyWS.send(JSON.stringify({"type": "temperature", "value": combinedInfo}));
-                        //keyWS.send(JSON.stringify({"type": "temperatures", "value": temperaturesAndDates}));
-                        //keyWS.send(JSON.stringify({"type": "temperatures", "value": temperatures}));
-                        //keyWS.send(JSON.stringify({"type": "dates", "value": dates}));
+                        keyWS.send(JSON.stringify({"type": "temperature", "value": {date: resultDate.date, time: resultDate.time, temp: temp}}));
                     }
                     if(value == "thermometer"){
                         keyWS.send(JSON.stringify({"type": "services", "value": Object.fromEntries(services)}));
@@ -252,28 +268,38 @@ export function routes(app, wss, oidc, config) {
                 const windowsIds = data.states.map((window) => window.windowId);
                 const numWindows = windowsStates.length - windows.length;
 
-                // if(windows.length != windowsStates.length){
-                //     for (let i = 0; i < numWindows; i++) {
-                //         windows.push(new Window( windowsIds[i], windowsStates[i]));
-                //     }
-                // }
+                resultDate = retrieveDate(data.dateTime);
+
+                console.info("New states received from the windows microservice: " + windowsStates);
+                console.info("Combined time: " + resultDate.time);
+                console.info("Combined date: " + resultDate.date);
 
                 if(windows.length != windowsStates.length){
                     for (let i = 0; i < numWindows; i++) {
-                        windows.push(new Window(null, windowsStates[i]));
+                        windows.push(new Window(null, null));
                     }
                 }
 
                 for (let i = 0; i < windows.length; i++) {
                     windows[i].windowId = windowsIds[i];
                     windows[i].state = windowsStates[i];
+                    let current = windowsMap.get(windowsIds[i]);
+                    if(current){
+                        const extData = windowsMap.get(windowsIds[i]);
+                        extData.push({date: resultDate.date, time: resultDate.time, state: windowsStates[i]});
+                    }
+                    else{
+                        windowsMap.set(windowsIds[i], [{date: resultDate.date, time: resultDate.time, state: windowsStates[i]}]);
+                    }
                 }
 
                 services.set("windows", windows);
+                combinedInfo = [resultDate, windowsIds, windowsStates];
+                stateAndDatesWindows.push(combinedInfo);
 
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
-                        keyWS.send(JSON.stringify({"type": "windows", "value": windowsStates}));
+                        keyWS.send(JSON.stringify({"type": "windows", "value": combinedInfo}));
                     }
                     if(value == "thermometer"){
                         keyWS.send(JSON.stringify({"type": "services", "value": Object.fromEntries(services)}));
@@ -283,24 +309,41 @@ export function routes(app, wss, oidc, config) {
             
             case "doors":
                 const doorsStates = data.states.map((door) => door.state);
-                const doorIds = data.states.map((door) => door.doorId);
+                const doorsIds = data.states.map((door) => door.doorId);
+
+                resultDate = retrieveDate(data.dateTime);
+
+                console.info("New states received from the doors microservice: " + doorsStates);
+                console.info("Combined time: " + resultDate.time);
+                console.info("Combined date: " + resultDate.date);
 
                 if(doors.length != doorsStates.length){
                     for (let i = 0; i < (doorsStates.length - doors.length); i++) {
-                        doors.push(new Door(null, doorsStates[i]));
+                        doors.push(new Door(null, null));
                     }
                 }
 
                 for (let i = 0; i < doors.length; i++) {
-                    doors[i].doorId = doorIds[i];
+                    doors[i].doorId = doorsIds[i];
                     doors[i].state = doorsStates[i];
+                    let current = doorsMap.get(doorsIds[i]);
+                    if(current){
+                        const extDataDoors = doorsMap.get(doorsIds[i]);
+                        extDataDoors.push({date: resultDate.date, time: resultDate.time, state: doorsStates[i]});
+                    }
+                    else{
+                        doorsMap.set(doorsIds[i], [{date: resultDate.date, time: resultDate.time, state: doorsStates[i]}]);
+                    }
                 }
 
                 services.set("doors", doors);
+                combinedInfo = [resultDate, doorsStates];
+                stateAndDatesDoors.push(combinedInfo);
 
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
-                        keyWS.send(JSON.stringify({"type": "doors", "value": doorsStates}));
+                        //keyWS.send(JSON.stringify({"type": "doors", "value": doorsStates}));
+                        keyWS.send(JSON.stringify({"type": "doors", "value": combinedInfo}));
                     }
                     if(value == "thermometer"){
                         keyWS.send(JSON.stringify({"type": "services", "value": Object.fromEntries(services)}));
@@ -312,26 +355,11 @@ export function routes(app, wss, oidc, config) {
                 const state = data.value.state;
                 const temperatureOp = parseInt(data.value.temperatureOp, 10);
                 
-                completeDate = new Date(data.dateTime);
-
-                console.log(completeDate);
-
-                hours = completeDate.getHours();
-                minutes = completeDate.getMinutes();
-                seconds = completeDate.getSeconds();
-
-                year = completeDate.getFullYear();
-                month = completeDate.getMonth() + 1;
-                day = completeDate.getDate();
-
-                time = `${hours}:${minutes}:${seconds}`;
-                date = `${day}-${month}-${year}`;
+                resultDate = retrieveDate(data.dateTime);
 
                 console.info("New temperature received from the heatpump microservice: " + temperatureOp);
-                console.info("Combined time heatpump: " + time);
-                console.info("Combined date heatpump: " + date);
-
-                combinedInfo = `${time}/${date}/${temperatureOp}/${state}`;
+                console.info("Combined time heatpump: " + resultDate.time);
+                console.info("Combined date heatpump: " + resultDate.date);
 
                 if(heatPump === null){
                     heatPump = new HeatPump(state, temperatureOp);
@@ -340,10 +368,14 @@ export function routes(app, wss, oidc, config) {
                     heatPump.state = state;
                     heatPump.temperatureOp = temperatureOp;
                 }
+
+                heatpumpInformations.push({date: resultDate.date, time: resultDate.time, temp: temperatureOp, state: state});
+
                 services.set("heatpump", heatPump);
+
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
-                        keyWS.send(JSON.stringify({"type": "heatpump", "value": combinedInfo}));
+                        keyWS.send(JSON.stringify({"type": "heatpump", "value": {date: resultDate.date, time: resultDate.time, temp: temperatureOp, state: state}}));
                     }
                     if(value == "thermometer"){
                         keyWS.send(JSON.stringify({"type": "services", "value": Object.fromEntries(services)}));
@@ -354,25 +386,21 @@ export function routes(app, wss, oidc, config) {
             case "thermometer":
                 console.info("New temperature received from the thermometer microservice: " + data.roomTemp);
                 const tempT = data.roomTemp;
-                const completeDateT = new Date(data.dateTime);
 
-                const hoursT = completeDateT.getHours();
-                const minutesT = completeDateT.getMinutes();
-                const secondsT = completeDateT.getSeconds();
-
-                const timeT = `${hoursT}:${minutesT}:${secondsT}`;
+                resultDate = retrieveDate(data.dateTime);
 
                 console.info("New temperature received from the thermometer microservice: " + tempT);
-                console.info("Combined time: " + timeT);
+                console.info("Combined time: " + resultDate.time);
+                console.info("Combined date: " + resultDate.date);
                 
                 services.set("thermometer", data.roomTemp);
                 
-                temperaturesAndDatesT.set(timeT, tempT);
-                const combinedInfoT = `${timeT}-${tempT}`;
+                tempAndDatesThermometer.push({date: resultDate.date, time: resultDate.time, temp: tempT});
+
                 for (let [keyWS, value] of clients) {
                     if(value == "client"){
                         //keyWS.send(JSON.stringify({"type": "thermometer", "value": data.value}));
-                        keyWS.send(JSON.stringify({"type": "thermometer", "value": combinedInfoT}));
+                        keyWS.send(JSON.stringify({"type": "thermometer", "value": {date: resultDate.date, time: resultDate.time, temp: tempT}}));
                     }
                 }
                 break;
@@ -388,12 +416,67 @@ export function routes(app, wss, oidc, config) {
     });
 
     app.get('/tokens', (req, resp) => {
-        // noinspection JSIgnoredPromiseFromCall
         oidc.tokens(req, resp);
     });
 
     app.get("/windows", authenticate, (req, resp) => {
         const objects = windows.map(toDTOWindow);
+        resp.json({
+            total: objects.length,
+            results: objects
+        });
+    });
+
+    app.get("/windowData/:id", authenticate, (req, resp) => {
+        const idRaw = req.params.id;
+        if (!isInteger(idRaw)) {
+            resp.status(400);
+            resp.json({error: 'Invalid door identifier'});
+            return;
+        }
+        const id = parseInt(idRaw, 10)
+        const objects = windowsMap.get(id);
+        console.log(objects);
+        resp.json({
+            total: objects.length,
+            results: objects
+        });
+    });
+
+    app.get("/doorData/:id", authenticate, (req, resp) => {
+        const idRaw = req.params.id;
+        if (!isInteger(idRaw)) {
+            resp.status(400);
+            resp.json({error: 'Invalid door identifier'});
+            return;
+        }
+        const id = parseInt(idRaw, 10)
+        const objects = doorsMap.get(id);
+        console.log(objects);
+        resp.json({
+            total: objects.length,
+            results: objects
+        });
+    });
+
+    app.get("/heatpumpData", authenticate, (req, resp) => {
+        const objects = heatpumpInformations;
+        resp.json({
+            total: objects.length,
+            results: objects
+        });
+    });
+
+    app.get("/thermometerData", authenticate, (req, resp) => {
+        const objects = tempAndDatesThermometer;
+        resp.json({
+            total: objects.length,
+            results: objects
+        });
+    });
+
+    app.get("/weatherData", authenticate, (req, resp) => {
+        const objects = temperaturesAndDatesWeather;
         resp.json({
             total: objects.length,
             results: objects
@@ -424,10 +507,16 @@ export function routes(app, wss, oidc, config) {
 
         makeRequest('PUT', `http://actuator:8086/heatpump/state`, dto).then((response) => {
             console.log('Response from actuator:', response);
-            if(response.status === 400){
+            if(response.status === 408){
+              resp.status(408);
+              resp.json({error: "Request timed out"});
+              return;
+            }
+            else if(response.status === 400){
                 resp.status(400);
                 resp.json({error: "Heatpump state not changed"});
                 console.info("Heatpump state not updated");
+                return;
             }
             else {
                 resp.status(200);
@@ -447,10 +536,16 @@ export function routes(app, wss, oidc, config) {
 
         makeRequest('PUT', `http://actuator:8086/heatpump/temperatureOp`, dto).then((response) => {
             console.log('Response from actuator:', response);
-            if(response.status === 400){
+            if(response.status === 408){
+              resp.status(408);
+              resp.json({error: "Request timed out"});
+              return;
+            }
+            else if(response.status === 400){
                 resp.status(400);
                 resp.json({error: "Operation temperature not changed"});
                 console.info("Heatpump operation temperature not updated");
+                return;
             }
             else {
                 resp.status(200);
@@ -488,6 +583,11 @@ export function routes(app, wss, oidc, config) {
                 resp.json({error: "Window state not changed"});
                 return;
             }
+            else if(response.status === 408){
+                resp.status(408);
+                resp.json({error: "Requeste timed out"});
+                return;
+            }
             else {
                 resp.status(200);
                 resp.json({result: "Windows state successfully changed"});
@@ -504,9 +604,15 @@ export function routes(app, wss, oidc, config) {
 
         makeRequest('POST', `http://actuator:8086/door`, dto).then((response) => {
             console.info('Response from actuator:', response.json());
-            if(response.status === 400){
+            if(response.status === 408){
+              resp.status(408);
+              resp.json({error: "Request timed out"});
+              return;
+            }
+            else if(response.status === 400){
                 resp.status(400);
                 resp.json({error: "Door not added"});
+                return;
             }
             else {
                 resp.status(201);
@@ -523,9 +629,15 @@ export function routes(app, wss, oidc, config) {
 
         makeRequest('POST', `http://actuator:8086/window`, dto).then((response) => {
             console.info('Response from actuator:', response.json());
-            if(response.status === 400){
+            if(response.status === 408){
+              resp.status(408);
+              resp.json({error: "Request timed out"});
+              return;
+            }
+            else if(response.status === 400){
                 resp.status(400);
                 resp.json({error: "Window not added"});
+                return;
             }
             else {
                 resp.status(201);
@@ -556,7 +668,12 @@ export function routes(app, wss, oidc, config) {
         
         makeRequest('PUT', `http://actuator:8086/door/${encodeURIComponent(id)}`, dto).then((response) => {
             console.log('Response from actuator:', response.json());
-            if(response.status === 400){
+            if(response.status === 408){
+              resp.status(408);
+              resp.json({error: "Request timed out"});
+              return;
+            }
+            else if(response.status === 400){
                 resp.status(400);
                 resp.json({error: "Door state not changed"});
                 return;

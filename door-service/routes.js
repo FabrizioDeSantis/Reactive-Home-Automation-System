@@ -81,7 +81,7 @@ function isInteger(n) {
  * @param ws {WebSocket} The WebSocket client
  * @param handler {WeatherHandler} The WebSocket handler
  */
-function registerHandler(ws, handler) {
+function registerHandler(app, config, ws, handler) {
 
   const removeAllListeners = () => {
     ws.removeListener('handler', handlerCb);
@@ -107,6 +107,11 @@ function registerHandler(ws, handler) {
     console.info('⛔ WebSocket closed', {handler:handler.name},);
     handler.stop();
     removeAllListeners();
+
+    setTimeout(function(){
+      console.info("Connection to the backend closed. Reconnecting...");
+      routes(app, config);
+    }, 5000);
   }
 
   function errorCb(err) {
@@ -129,6 +134,10 @@ function registerHandler(ws, handler) {
   handler.start();
 }
 
+// function restartHandler(ws, handler){
+
+// }
+
 /**
  * Initializes routes.
  * @param {Express} app Express application
@@ -141,8 +150,16 @@ export function routes(app, config) {
     console.info("✅ Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "door"}));
-      handler = new DoorHandler(ws, config, `door:${uuid()}`);
-      registerHandler(ws, handler);
+
+      if(handler === null){
+        handler = new DoorHandler(ws, config, `door:${uuid()}`);      
+      }
+      else{
+        handler.ws = ws;
+      }
+      
+      registerHandler(app, config, ws, handler);
+      
     } catch (e) {
       console.error('💥 Failed to register WS handler, closing connection', e);
       ws.close();
@@ -155,37 +172,48 @@ export function routes(app, config) {
 
   ws.on("error", () => {
     setTimeout(function(){
-      console.info("Connection to the backend refused. Reconnecting...");
+      console.info("Connection to the backend failed. Reconnecting...");
       routes(app, config);
-    }, 1000);
+    }, 2000);
   });
 
   app.put('/door/:id', (req, resp) => {
-    const {state} = req.body;
-    const idRaw = req.params.id;
-    console.debug('Attempting to update door', {id: idRaw, state});
+    if(!handler.death){
+      const {state} = req.body;
+      const idRaw = req.params.id;
+      console.debug('Attempting to update door', {id: idRaw, state});
 
-    if (!isInteger(idRaw)) {
-      resp.status(400);
-      resp.json({error: 'Invalid door identifier'});
-      return;
+      if (!isInteger(idRaw)) {
+        resp.status(400);
+        resp.json({error: 'Invalid door identifier'});
+        return;
+      }
+
+      const id = parseInt(idRaw, 10);
+      const door = doors.find(t => t.doorId === id);
+      door.state = state;
+      handler._sendState();
+      resp.status(200);
+      resp.json({result: "Success"});
     }
-
-    const id = parseInt(idRaw, 10);
-    const door = doors.find(t => t.doorId === id);
-    door.state = state;
-    handler._sendState();
-    resp.status(200);
-    resp.json({result: "Success"});
+    else{
+      console.info("❌ Microservice is down");
+    }
+    
   });
 
   app.post('/door', (req, resp) => {
-    const {state} = req.body;
-    const door = new Door(seq(), state);
-    doors.push(door);
-    handler._sendState();
-    resp.status(201);
-    resp.json({result: "Success"});
+    if(!handler.death){
+      const {state} = req.body;
+      const door = new Door(seq(), state);
+      doors.push(door);
+      handler._sendState();
+      resp.status(201);
+      resp.json({result: "Success"});
+    }
+    else{
+      console.info("❌ Microservice is down");
+    }
   });
 
 }

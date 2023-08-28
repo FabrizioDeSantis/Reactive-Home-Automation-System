@@ -3,12 +3,15 @@
 import {WeatherHandler} from './weather-handler.js';
 import {WebSocket} from "ws";
 import {v4 as uuid} from 'uuid';
+
+let handler = null;
+
 /**
  * Registers a new handler for the WS channel.
  * @param ws {WebSocket} The WebSocket client
  * @param handler {WeatherHandler} The WebSocket handler
  */
-function registerHandler(ws, handler) {
+function registerHandler(app, config, ws, handler) {
 
   const removeAllListeners = () => {
     ws.removeListener('handler', handlerCb);
@@ -34,6 +37,11 @@ function registerHandler(ws, handler) {
     console.info('⛔ WebSocket closed', {handler:handler.name},);
     handler.stop();
     removeAllListeners();
+
+    setTimeout(function(){
+      console.info("Connection to the backend closed. Reconnecting...");
+      routes(app, config);
+    }, 5000);
   }
 
   function errorCb(err) {
@@ -68,20 +76,29 @@ export function routes(app, config) {
     console.info("✅ Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "temperature"}));
-      const handler = new WeatherHandler(ws, config, `weather:${uuid()}`);
-      registerHandler(ws, handler);
+
+      if(handler === null){
+        handler = new WeatherHandler(ws, config, `weather:${uuid()}`);
+      }
+      else{
+        handler.ws = ws;
+      }
+
+      registerHandler(app, config, ws, handler);
+      
     } catch (e) {
       console.error('💥 Failed to register WS handler, closing connection', e);
       ws.close();
     }
   });
+
   ws.on("close", () => {
-    
   });
+
   ws.on("error", () => {
     setTimeout(function(){
-      console.info("Connection to the backend refused. Reconnecting...");
+      console.info("Connection to the backend failed. Reconnecting...");
       routes(app, config);
-    }, 1000);
+    }, 2000);
   });
 }

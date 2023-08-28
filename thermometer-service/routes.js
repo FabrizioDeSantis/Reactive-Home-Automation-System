@@ -30,6 +30,7 @@ const seq = sequencer();
 
 const id = seq();
 const thermometer = new Thermometer(id, 20);
+let handler = null;
 
 let sensorsInformation;
 
@@ -69,7 +70,7 @@ export function updateTemperature(temp) {
  * @param ws {WebSocket} The WebSocket client
  * @param handler {WeatherHandler} The WebSocket handler
  */
-function registerHandler(ws, handler) {
+function registerHandler(app, config, ws, handler) {
 
   const removeAllListeners = () => {
     ws.removeListener('handler', handlerCb);
@@ -95,6 +96,11 @@ function registerHandler(ws, handler) {
     console.info('⛔ WebSocket closed', {handler:handler.name},);
     handler.stop();
     removeAllListeners();
+
+    setTimeout(function(){
+      console.info("Connection to the backend closed. Reconnecting...");
+      routes(app, config);
+    }, 5000);
   }
 
   function errorCb(err) {
@@ -129,8 +135,16 @@ export function routes(app, config) {
     console.info("✅ Connected to backend");
     try {
       ws.send(JSON.stringify({"type": "subscribe", "source": "thermometer"}));
-      const handler = new ThermometerHandler(ws, config, `thermometer:${uuid()}`);
-      registerHandler(ws, handler);
+
+      if(handler === null){
+        handler = new ThermometerHandler(ws, config, `thermometer:${uuid()}`);
+      }
+      else{
+        handler.ws = ws;
+      }
+          
+      registerHandler(app,config, ws, handler);
+      
     } catch (e) {
       console.error('💥 Failed to register WS handler, closing connection', e);
       ws.close();
@@ -142,9 +156,9 @@ export function routes(app, config) {
 
   ws.on("error", () => {
     setTimeout(function(){
-      console.info("Connection to the backend refused. Reconnecting...");
+      console.info("Connection to the backend failed. Reconnecting...");
       routes(app, config);
-    }, 1000);
+    }, 2000);
   });
 
 }

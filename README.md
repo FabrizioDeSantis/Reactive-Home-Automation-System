@@ -8,10 +8,9 @@ In order to be able to use the application, **authentication** is required; part
 The application is accessible via HTTP at this url: http://desantis-invitto.soi2223.unipr.it:8080.
 
 ## Frontend
-It is used by the user to access to and use the Web application, provided it has been authenticated. It is divided into three main sections:
-  - a **dashboard**, used to visualize the available sensors, their state and specific information;
-  - a **control panel**, used by the user to give commands to the sensors (e.g. open/close door X, set operation temperature of the heatpump, ...);
-  - a section for **graphs**, which displays the trend of the external, internal and heat pump temperatures and the history of the states of the sensors.
+It is used by the user to access to and use the Web application, provided it has been authenticated. It is divided into two main sections:
+  - a **dashboard**, used to visualize the available sensors, their state and specific information, and a series of graphs that display the trend of the temperatures and the history of the state of the sensors;
+  - a **control panel**, used by the user to give commands to the sensors (e.g. open/close door X, set operation temperature of the heatpump, ...).
 
 Each sensor has a dedicated component that is dinamically created once the sensor is added. The frontend is connected to the backend via Web Socket, from which it receives sensors' information and to which it forwards commands.
 When the user connects to the url provided above, the frontend sends the following JSON message to the backend:
@@ -165,7 +164,7 @@ function computeRoomTemperature(externalTemperature, windowsStates, doorsStates,
     return roomTemperature;
 }
 ```
-in which open doors and windows play the role of bringing the temperature closer to the external one, while the heatpump is responsible only for increasing the temperature.
+in which open doors and windows play the role of bringing the temperature closer to the external one, while the heatpump is responsible only for increasing the temperature. The temperature's lower limit is represented by the external temperature, while the upper limit is fixed to 25°C.
 The microservice periodically computes the current room temperature and it sends it to the backend only if the new value is different from the previous one.
 
 ### Weather service
@@ -179,3 +178,8 @@ A single instruction is necessary:
 docker-compose up --build
 ```
 launched in the main folder.
+A feature of the system is its capacity of recovering its correct functioning even after a restart of the backend. The restart of the backend can be triggered using the Docker command:
+```console
+docker-compose restart server
+```
+The microservices and the frontend will notice the closing of the WS connection with the backend and they will retry reconnecting to it.

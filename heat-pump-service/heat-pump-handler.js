@@ -48,6 +48,10 @@ export class HeatPumpHandler extends EventEmitter {
     return this.#name;
   }
 
+  set ws(ws) {
+    this.#ws = ws;
+  }
+
   /**
    * Handles incoming messages.
    * @param msg {string} An incoming JSON message
@@ -79,7 +83,7 @@ export class HeatPumpHandler extends EventEmitter {
   }
 
   start() {
-    console.debug('New connection received', {handler: this.#name});
+    console.debug('⭐️ New connection received', {handler: this.#name});
   }
 
   /**
@@ -121,16 +125,19 @@ export class HeatPumpHandler extends EventEmitter {
     // message is always appended to the buffer
     this.#buffer.push(msg);
 
-    // messages are dispatched immediately if delays are disabled or a random number is
-    // generated greater than `delayProb` messages
-    if (!this.#config.delays || Math.random() > this.#config.delayProb) {
-      for (const bMsg of this.#buffer) {
-        this._send(bMsg);
+    if(!this.#death){
+      // messages are dispatched immediately if delays are disabled or a random number is
+      // generated greater than `delayProb` messages
+      if (!this.#config.delays || Math.random() > this.#config.delayProb) {
+        for (const bMsg of this.#buffer) {
+          this._send(bMsg);
+        }
+        this.#buffer = [];
+      } else {
+        console.info(`💤 Due to network delays, ${this.#buffer.length} messages are still queued`, {handler: this.#name});
       }
-      this.#buffer = [];
-    } else {
-      console.info(`💤 Due to network delays, ${this.#buffer.length} messages are still queued`, {handler: this.#name});
     }
+    
   }
 
   /**
@@ -143,19 +150,6 @@ export class HeatPumpHandler extends EventEmitter {
     this.#ws.send(JSON.stringify(msg));
   }
 
-  _onSubscribe() {
-    if (this.#timeout) {
-      return;
-    }
-    console.debug('🔥 Subscribing to heatpump state', {handler: this.#name});
-    this._sendState();
-    const callback = () => {
-      this._simulateError();
-      this.#timeout = setTimeout(callback, this._someMillis());
-    };
-    this.#timeout = setTimeout(callback, 0);
-  }
-
   _simulateError(){
     if (this.#config.failures && Math.random() < this.#config.errorProb) {
       console.info('🚦 Simulating state change ', {handler: this.#name});
@@ -163,6 +157,40 @@ export class HeatPumpHandler extends EventEmitter {
       this._sendState();
       return;
     }
+  }
+
+  _simulateDowntime(){
+    if(!this.#death && Math.random() < this.#config.downProb){
+      console.info("📉 Simulating downtime", {handler: this.#name});
+      this.#death = true;
+    }
+    else if(this.#death){
+      console.info("📈 Microservice up", {handler: this.#name});
+      this.#death = false;
+    } 
+  }
+
+  _onSubscribe() {
+    if (this.#timeout) {
+      if(!this.#timeout._destroyed){
+        return;
+      }
+    }
+
+    console.debug('🔥 Subscribing to heatpump state', {handler: this.#name});
+    this._sendState();
+    
+    const callback = () => {
+      this._simulateError();
+      this.#timeout = setTimeout(callback, this._someMillis());
+    };
+    this.#timeout = setTimeout(callback, 0);
+
+    const callbackDownTime = () => {
+      this._simulateDowntime();
+      setTimeout(callbackDownTime, this._someMillis());
+    };
+    setTimeout(callbackDownTime, 0);
   }
 
   _onUnsubscribe() {

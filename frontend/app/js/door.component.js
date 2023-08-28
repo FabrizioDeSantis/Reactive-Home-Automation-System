@@ -65,7 +65,7 @@
 
       root.appendChild(element2);
       rootCharts.appendChild(elementChart);
-      this.createChart();
+      let chart = this.createChart();
 
       const doorNumber = this.#element.querySelector("#command-header");
       doorNumber.innerHTML = `Door ${this.#model.id} - ${doorNumber.innerHTML}`;
@@ -76,12 +76,15 @@
       refreshBtn.id = `refreshDoor ${this.#model.id}`;
       const closeBtn = this.#element.querySelector("#buttonOff");
       closeBtn.id = `buttonOff ${this.#model.id}`;
+      const filterBtn = document.querySelector("#filterDate");
       let hdlrOpen = new Handler('click', openBtn, () => this.open());
       this.#handlers.push(hdlrOpen);
       let hdlrClose = new Handler('click', closeBtn, () => this.close());
       this.#handlers.push(hdlrClose);
       let hdlrRestart = new Handler('click', refreshBtn, () => this.restart());
       this.#handlers.push(hdlrRestart);
+      let hdlrFilter = new Handler('click', filterBtn, () => this.filter(chart));
+      this.#handlers.push(hdlrFilter);
 
       return this.#element;
     }
@@ -127,10 +130,66 @@
             }
         }
       };
-      const myChartDoors = new Chart(
+      return new Chart(
         document.getElementById(`chartDoor-${this.#model.id}`),
         configDoors
       );
+    }
+
+    async filter(chart) {
+      console.debug("Attempting to get filtered data graph");
+      try{
+        const resp = await this.#model.filter();
+        let labels=[];
+        let labels2=[];
+        let values=[];
+        resp.results.forEach(dto => {
+          labels.push(dto.date+"\n"+dto.time);
+          switch(dto.state){
+            case "open":
+              values.push(2);
+              break;
+            case "closed":
+              values.push(1);
+              break;
+            case "error":
+              values.push(0);
+              break;
+          }
+        });
+        for(let i=0; i< labels.length; i++){
+            labels2.push(labels[i].slice(0, 10));
+        }
+        const startDate = document.getElementById("startDate");
+        const endDate = document.getElementById("endDate");
+
+        let indexStart = labels2.indexOf(startDate.value);
+        let indexEnd = labels2.lastIndexOf(endDate.value);
+
+        if(!(indexStart == -1 && indexEnd == -1)){
+            if(indexStart == -1){
+                indexStart = 0;
+            }
+            if(indexEnd == -1){
+                indexEnd = labels2.length;
+            }
+        }
+
+        const filterDate = labels.slice(indexStart, indexEnd + 1);
+        
+        chart.data.labels = filterDate;
+        
+        const datapoints2 = [...values];
+        const filterDataPoints = datapoints2.slice(indexStart, indexEnd + 1);
+        
+        chart.data.datasets[0].data = filterDataPoints;
+        chart.update();
+      }catch(e){
+        const section = document.querySelector("section");
+        const errorMessage = document.querySelector("#error-message");
+        section.classList.add("active");
+        errorMessage.innerHTML = "Error.";
+      }
     }
 
     async open() {
@@ -138,10 +197,16 @@
       try{
         await this.#model.update("open");
       }catch(e) {
+        console.log(e.status);
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
+        if(e.status == 408){
+          errorMessage.innerHTML = "Request timed out. Door service is down.";
+        }
+        else{
+          errorMessage.innerHTML = "Error. Door already open or is in error.";
+        }
         section.classList.add("active");
-        errorMessage.innerHTML = "Error. Door already closed or is in error.";
       }
     }
 
@@ -150,10 +215,16 @@
       try{
         await this.#model.update("closed");
       }catch(e) {
+        console.log(e.status);
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
+        if(e.status == 408){
+          errorMessage.innerHTML = "Request timed out. Door service is down.";
+        }
+        else{
+          errorMessage.innerHTML = "Error. Door already closed or is in error.";
+        }
         section.classList.add("active");
-        errorMessage.innerHTML = "Error. Door already closed or is in error.";
       }
     }
 
@@ -165,7 +236,13 @@
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         section.classList.add("active");
-        errorMessage.innerHTML = "Error.";
+        if(e.status == 408){
+          errorMessage.innerHTML = "Request timed out. Door service is down.";
+        }
+        else{
+          errorMessage.innerHTML = "Error.";
+        }
+        section.classList.add("active");
       }
     }
 

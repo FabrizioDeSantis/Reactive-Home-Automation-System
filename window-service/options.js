@@ -12,7 +12,7 @@ const {merge} = lodash;
 const IFACE = '0.0.0.0';
 const PORT = 8082;
 const ERROR_PROB = 0.2;
-const DOWN_PROB = 1;
+const DOWN_PROB = 0.2;
 const DELAY_PROB = 0;
 const FREQ_MS = 10000;
 const TTL_SEC = 60;
@@ -69,7 +69,7 @@ export function parse() {
       .option('-t, --time-to-live <s>', 'The average time to live of a client connection, if 0 then it\' never gonna die (default 60)', p => parseInt(p, 10))
       .option('-d, --delay-prob <prob>', 'The probability that a message is delayed (default 0.2)', parseFloat)
       .option('-e, --error-prob <prob>', 'The probability that an error occurs (default 0.1)', parseFloat)
-      .option('-o, --down-prob <prob>', 'The probability that the microservice goes down (default 0.1)', parseFloat)
+      .option('-o, --down-prob <prob>', 'The probability that the microservice goes down (default 0.2)', parseFloat)
       .option('-E, --no-env', 'Ignores the .env file')
       .option('-F, --no-failures', 'Don\'t simulate failures')
       .option('-D, --no-delays', 'Don\'t simulate delays')

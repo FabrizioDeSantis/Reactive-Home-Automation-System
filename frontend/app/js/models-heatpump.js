@@ -70,6 +70,11 @@
       this.temperatureOp = newTemp;
       return this;
     }
+
+    async filter(){
+      const resp = await this.#client.get("heatpumpData");
+      return resp;
+    }
   }
 
   /* Exporting models */

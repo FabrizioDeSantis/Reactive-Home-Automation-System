@@ -52,6 +52,10 @@ export class WindowHandler extends EventEmitter {
     return this.#death;
   }
 
+  set ws(ws) {
+    this.#ws = ws;
+  }
+
   /**
    * Handles incoming messages.
    * @param msg {string} An incoming JSON message
@@ -77,13 +81,13 @@ export class WindowHandler extends EventEmitter {
     if (this.#timeout) {
       clearTimeout(this.#timeout);
     }
-    if (this.#death) {
-      clearTimeout(this.#death);
-    }
+    // if (this.#death) {
+    //   clearTimeout(this.#death);
+    // }
   }
 
   start() {
-    console.debug('New connection received', {handler: this.#name});
+    console.debug('⭐️ New connection received', {handler: this.#name});
   }
 
   /**
@@ -139,6 +143,25 @@ export class WindowHandler extends EventEmitter {
     }
   }
 
+  /**
+   * Sends any message through the WebSocket channel.
+   * @param msg Any message
+   * @private
+   */
+  _send(msg) {
+    console.debug('💬 Dispatching message', {handler: this.#name});
+    this.#ws.send(JSON.stringify(msg));
+  }
+
+  _simulateError(){
+    if (this.#config.failures && Math.random() < this.#config.errorProb) {
+      console.info('🚦 Simulating state change', {handler: this.#name});
+      simulateChanges();
+      this._sendState();
+      return;
+    }
+  }
+
   _simulateDowntime(){
     if(!this.#death && Math.random() < this.#config.downProb){
       console.info("📉 Simulating downtime", {handler: this.#name});
@@ -150,19 +173,11 @@ export class WindowHandler extends EventEmitter {
     } 
   }
 
-  /**
-   * Sends any message through the WebSocket channel.
-   * @param msg Any message
-   * @private
-   */
-  _send(msg) {
-    console.debug('💬 Dispatching message', {handler: this.#name});
-    this.#ws.send(JSON.stringify(msg));
-  }
-
   _onSubscribe() {
     if (this.#timeout) {
-      return;
+      if(!this.#timeout._destroyed){
+        return;
+      }
     }
 
     console.debug('🪟 Subscribing to window state', {handler: this.#name});
@@ -172,20 +187,12 @@ export class WindowHandler extends EventEmitter {
       this.#timeout = setTimeout(callback, this._someMillis());
     };
     this.#timeout = setTimeout(callback, 0);
+
     const callbackDownTime = () => {
       this._simulateDowntime();
       setTimeout(callbackDownTime, this._someMillis());
     };
     setTimeout(callbackDownTime, 0);
-  }
-
-  _simulateError(){
-    if (this.#config.failures && Math.random() < this.#config.errorProb) {
-      console.info('🚦 Simulating state change', {handler: this.#name});
-      simulateChanges();
-      this._sendState();
-      return;
-    }
   }
 
   _onUnsubscribe() {

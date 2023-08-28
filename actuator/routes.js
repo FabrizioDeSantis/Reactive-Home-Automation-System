@@ -14,7 +14,9 @@ async function makeRequest(type, url, data, timeout) {
   
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        reject(new Error('Request timed out'));
+        const timeoutError = new Error('Request timed out');
+        timeoutError.status = 408;
+        reject(timeoutError);
       }, timeout);
     });
     const response = await Promise.race([fetchPromise, timeoutPromise]);
@@ -22,6 +24,9 @@ async function makeRequest(type, url, data, timeout) {
     return result;
   }catch(e){
     console.error('Error:', e);
+    if(e.status){
+      return { status: e.status, message: 'Something went wrong' };
+    }
     return { e: 'Something went wrong' };
   }
 }
@@ -39,11 +44,17 @@ export function routes(app, config) {
     console.debug('Attempting to create new door with state: ', {state});
 
     let dto = {state: state};
-    makeRequest('POST', `http://door-service:8083/door`, dto, 2000).then((response) => {
-        console.log('Response from service:', response.json());
-        if(response.status === 400){
+    makeRequest('POST', `http://door-service:8083/door`, dto, 3000).then((response) => {
+        console.log('Response from service:', response);
+        if(response.status === 408){
+          resp.status(408);
+          resp.json({error: "Request timed out"});
+          return;
+        }
+        else if(response.status === 400){
           resp.status(400);
           resp.json({error: "Door not added"});
+          return;
         }
         else{
           resp.status(201);
@@ -59,10 +70,16 @@ export function routes(app, config) {
 
     let dto = {state: state};
     makeRequest('POST', `http://window-service:8082/window`, dto, 3000).then((response) => {
-        console.log('Response from service:', response.json());
-        if(response.status === 400){
+        console.log('Response from service:', response);
+        if(response.status === 408){
+          resp.status(408);
+          resp.json({error: "Request timed out"});
+          return;
+        }
+        else if(response.status === 400){
           resp.status(400);
           resp.json({error: "Window not added"});
+          return;
         }
         else{
           resp.status(201);
@@ -86,10 +103,16 @@ export function routes(app, config) {
       }
       let dto = {state: state};
       makeRequest('PUT', `http://heatpump-service:8084/heatpump/state`, dto, 3000).then((response) => {
-            console.info('Response from heatpump microservice: ', response.json());
-            if(response.status === 400){
+            console.info('Response from heatpump microservice: ', response);
+            if(response.status === 408){
+              resp.status(408);
+              resp.json({error: "Request timed out"});
+              return;
+            }
+            else if(response.status === 400){
               resp.status(400);
               resp.json({error: "Heatpump state not changed"});
+              return;
             }
             else{
               resp.status(200);
@@ -107,25 +130,34 @@ export function routes(app, config) {
     if(state === "off" || state === "error") {
       resp.status(400);
       resp.json({error: "Heatpump state is " + state});
+      return;
     }
     else{
 
       if(parseInt(temperatureOp, 10) > 60) {
         resp.status(400);
         resp.json({error: "Operation temperature is too high"});
+        return;
       }
       else if(parseInt(temperatureOp, 10) < 0){
         resp.status(400);
         resp.json({error: "Operation temperature must be positive"})
+        return;
       }
       else{
         let dto = {temperatureOp: temperatureOp};
 
         makeRequest('PUT', `http://heatpump-service:8084/heatpump/temperatureOp`, dto, 3000).then((response) => {
-              console.info('Response from heatpump microservice: ', response.json());
-              if(response.status === 400){
+              console.info('Response from heatpump microservice: ', response);
+              if(response.status === 408){
+                resp.status(408);
+                resp.json({error: "Request timed out"});
+                return;
+              }
+              else if(response.status === 400){
                 resp.status(400);
                 resp.json({error: "Operation temperature not changed"});
+                return;
               }
               else{
                 resp.status(200);
@@ -153,10 +185,16 @@ export function routes(app, config) {
       let dto = {state: state};
       const id = parseInt(idRaw, 10);
       makeRequest('PUT', `http://door-service:8083/door/${encodeURIComponent(id)}`, dto, 3000).then((response) => {
-        console.log('Response from service:', response.json());
-        if(response.status === 400){
+        console.log('Response from service:', response);
+        if(response.status === 408){
+          resp.status(408);
+          resp.json({error: "Request timed out"});
+          return;
+        }
+        else if(response.status === 400){
           resp.status(400);
           resp.json({error: "Door state not changed"});
+          return;
         }
         else{
           resp.status(200);
@@ -182,10 +220,16 @@ export function routes(app, config) {
       let dto = {state: state};
       const id = parseInt(idRaw, 10);
       makeRequest('PUT', `http://window-service:8082/window/${encodeURIComponent(id)}`, dto, 3000).then((response) => {
-            console.info('Response from window:', response.json());
-            if(response.status === 400){
+            console.info('Response from window:', response);
+            if(response.status === 408){
+              resp.status(408);
+              resp.json({error: "Request timed out"});
+              return;
+            }
+            else if(response.status === 400){
               resp.status(400);
               resp.json({error: "Window state not changed"});
+              return;
             }
             else{
               resp.status(200);

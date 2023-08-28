@@ -11,9 +11,9 @@ const {merge} = lodash;
 
 const IFACE = '0.0.0.0';
 const PORT = 8082;
-const ERROR_PROB = 0.1;
-const DELAY_PROB = 0.2;
-const FREQ_MS = 2000;
+const ERROR_PROB = 0.0;
+const DELAY_PROB = 0.0;
+const FREQ_MS = 5000;
 const TTL_SEC = 60;
 
 function assertPort(port, program, excode) {

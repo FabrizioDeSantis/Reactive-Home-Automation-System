@@ -63,6 +63,11 @@
       this.state = newState;
       return this;
     }
+
+    async filter(){
+      const resp = await this.#client.get(`windowData/${encodeURIComponent(this.id)}`);
+      return resp;
+    }
   }
 
   /* Exporting models */

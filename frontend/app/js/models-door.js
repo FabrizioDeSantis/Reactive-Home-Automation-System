@@ -64,6 +64,11 @@
       this.state = newState;
       return this;
     }
+
+    async filter(){
+      const resp = await this.#client.get(`doorData/${encodeURIComponent(this.id)}`);
+      return resp;
+    }
   }
 
   /* Exporting models */
