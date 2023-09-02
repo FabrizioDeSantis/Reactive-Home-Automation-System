@@ -87,6 +87,9 @@ export class ThermometerHandler extends EventEmitter {
     if (this.#death) {
       clearTimeout(this.#death);
     }
+    if(this.#initTempSent) {
+      this.#initTempSent = false;
+    }
   }
 
   start() {

@@ -1,10 +1,13 @@
 'use strict';
 
-(function (win){
+(function (win) {
+
+    const { Subject, filter } = rxjs;
+    const dataSubject = new Subject();
 
     function waitForElementToBeAvailable(elementId) {
-        return new Promise(function(resolve) {
-            var checkElementInterval = setInterval(function() {
+        return new Promise(function (resolve) {
+            var checkElementInterval = setInterval(function () {
                 var elemento = document.getElementById(elementId);
                 if (elemento) {
                     clearInterval(checkElementInterval);
@@ -14,13 +17,20 @@
         });
     }
 
-    function routes(ws){
+    function createFilteredObs(dataType) {
+        return dataSubject.pipe(
+            filter((data) => data.type === dataType)
+        );
+    }
+
+    function routes(ws) {
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
+            dataSubject.next(data);
             let filtered = false;
             const filterBtn = document.querySelector("#filterDate");
             filterBtn.classList.forEach(name => {
-                if(name == "active"){
+                if (name == "active") {
                     filtered = true;
                 }
             });
@@ -29,150 +39,71 @@
             date = date.toISOString();
             date = date.slice(0, 10);;
             let buttonRefresh;
-            switch(data.type){
-                case "temperature":
-                    const weatherInfo = data.value;
-                    document.getElementById("temperature-weather").innerHTML = parseFloat(weatherInfo.temp, 10).toFixed(1) + "°C";
-                    let chartInstance = Chart.getChart("chartWeather");
-                    sample = chartInstance.data.labels[0];
-                    if(!filtered && sample === undefined){
-                        chartInstance.data.labels.push(weatherInfo.date+"\n"+weatherInfo.time);
-                        chartInstance.data.datasets[0].data.push(weatherInfo.temp);
-                        chartInstance.update();
-                    }
-                    if(sample !== undefined){
-                        if(date == sample.slice(0, 10)){
-                            chartInstance.data.labels.push(weatherInfo.date+"\n"+weatherInfo.time);
-                            chartInstance.data.datasets[0].data.push(weatherInfo.temp);
-                            chartInstance.update();
-                        }
-                    }
-                    break;
+            switch (data.type) {
+                // case "doors":
+                //     const dateDoors = data.value[0];
+                //     const doorsStates = data.value[1];
+                //     for (let i = 0; i < doorsStates.length; i++) {
+                //         waitForElementToBeAvailable("door-" + (i + 1)).then(function() {
+                //             document.getElementById("door-" + (i + 1)).innerHTML = doorsStates[i];
+                //             buttonRefresh = document.getElementById("refreshDoor " + (i + 1));
+                //             const cerchio = document.querySelector(".insights .door" + (i + 1) + " svg circle");
+                //             let chartInstance = Chart.getChart("chartDoor-" + (i+1));
+                //             sample = chartInstance.data.labels[0];
+                //             switch(doorsStates[i]){
+                //                 case "open":
+                //                     cerchio.style.stroke = "#41f1b6";
+                //                     buttonRefresh.classList.remove("active");
+                //                     break;
+                //                 case "closed":
+                //                     cerchio.style.stroke = "#363949";
+                //                     buttonRefresh.classList.remove("active");
+                //                     break;
+                //                 case "error":
+                //                     cerchio.style.stroke = "#ff7782";
+                //                     buttonRefresh.classList.add("active");
+                //                     break;
+                //             }
+                //             if(!filtered && sample === undefined){
+                //                 chartInstance.data.labels.push(dateDoors.date+"\n"+dateDoors.time);
+                //                 switch(doorsStates[i]){
+                //                     case "open":
+                //                         chartInstance.data.datasets[0].data.push(2);
+                //                         break;
+                //                     case "closed":
+                //                         chartInstance.data.datasets[0].data.push(1);
+                //                         break;
+                //                     case "error":
+                //                         chartInstance.data.datasets[0].data.push(0);
+                //                         break;
+                //                 }
+                //                 chartInstance.update();
+                //             }
+                //             if(sample !== undefined){
+                //                 if(date == sample.slice(0, 10)){
+                //                     chartInstance.data.labels.push(dateDoors.date+"\n"+dateDoors.time);
+                //                     switch(doorsStates[i]){
+                //                         case "open":
+                //                             chartInstance.data.datasets[0].data.push(2);
+                //                             break;
+                //                         case "closed":
+                //                             chartInstance.data.datasets[0].data.push(1);
+                //                             break;
+                //                         case "error":
+                //                             chartInstance.data.datasets[0].data.push(0);
+                //                             break;
+                //                     }
+                //                     chartInstance.update();
+                //                 }
+                //             }
+                //         });
+                //     }
 
-                case "windows":
-                    const windowsDate = data.value[0];
-                    const windowsStates = data.value[2];
-                    for (let i = 0; i < windowsStates.length; i++) {
-                        waitForElementToBeAvailable("window-" + (i + 1)).then(function() {
-                            document.getElementById("window-" + (i + 1)).innerHTML = windowsStates[i];
-                            buttonRefresh = document.getElementById("refreshWindow " + (i + 1));
-                            const cerchio = document.querySelector(".insights .window" + (i + 1) + " svg circle");
-                            let chartInstance = Chart.getChart("chartWindow-" + (i+1));
-                            sample = chartInstance.data.labels[0];
-                            switch(windowsStates[i]){
-                                case "open":
-                                    cerchio.style.stroke = "#41f1b6";
-                                    buttonRefresh.classList.remove("active");
-                                    break;
-                                case "closed":
-                                    cerchio.style.stroke = "#363949";
-                                    buttonRefresh.classList.remove("active");
-                                    break;
-                                case "error":
-                                    cerchio.style.stroke = "#ff7782";
-                                    buttonRefresh.classList.add("active");
-                                    break;
-                            }
-                            if(!filtered && sample === undefined){
-                                chartInstance.data.labels.push(windowsDate.date+"\n"+windowsDate.time);
-                                switch(windowsStates[i]){
-                                    case "open":
-                                        chartInstance.data.datasets[0].data.push(2);
-                                        break;
-                                    case "closed":
-                                        chartInstance.data.datasets[0].data.push(1);
-                                        break;
-                                    case "error":
-                                        chartInstance.data.datasets[0].data.push(0);
-                                        break;
-                                }
-                                chartInstance.update();
-                            }
-                            if(sample !== undefined){
-                                if(date == sample.slice(0, 10)){
-                                    chartInstance.data.labels.push(windowsDate.date+"\n"+windowsDate.time);
-                                    switch(windowsStates[i]){
-                                        case "open":
-                                            chartInstance.data.datasets[0].data.push(2);
-                                            break;
-                                        case "closed":
-                                            chartInstance.data.datasets[0].data.push(1);
-                                            break;
-                                        case "error":
-                                            chartInstance.data.datasets[0].data.push(0);
-                                            break;
-                                    }
-                                    chartInstance.update();
-                                }
-                            }
-                        });
-                    }
-                    break;
+                //     break;
 
-                case "doors":
-                    const dateDoors = data.value[0];
-                    const doorsStates = data.value[1];
-                    for (let i = 0; i < doorsStates.length; i++) {
-                        waitForElementToBeAvailable("door-" + (i + 1)).then(function() {
-                            document.getElementById("door-" + (i + 1)).innerHTML = doorsStates[i];
-                            buttonRefresh = document.getElementById("refreshDoor " + (i + 1));
-                            const cerchio = document.querySelector(".insights .door" + (i + 1) + " svg circle");
-                            let chartInstance = Chart.getChart("chartDoor-" + (i+1));
-                            sample = chartInstance.data.labels[0];
-                            switch(doorsStates[i]){
-                                case "open":
-                                    cerchio.style.stroke = "#41f1b6";
-                                    buttonRefresh.classList.remove("active");
-                                    break;
-                                case "closed":
-                                    cerchio.style.stroke = "#363949";
-                                    buttonRefresh.classList.remove("active");
-                                    break;
-                                case "error":
-                                    cerchio.style.stroke = "#ff7782";
-                                    buttonRefresh.classList.add("active");
-                                    break;
-                            }
-                            if(!filtered && sample === undefined){
-                                chartInstance.data.labels.push(dateDoors.date+"\n"+dateDoors.time);
-                                switch(doorsStates[i]){
-                                    case "open":
-                                        chartInstance.data.datasets[0].data.push(2);
-                                        break;
-                                    case "closed":
-                                        chartInstance.data.datasets[0].data.push(1);
-                                        break;
-                                    case "error":
-                                        chartInstance.data.datasets[0].data.push(0);
-                                        break;
-                                }
-                                chartInstance.update();
-                            }
-                            if(sample !== undefined){
-                                if(date == sample.slice(0, 10)){
-                                    chartInstance.data.labels.push(dateDoors.date+"\n"+dateDoors.time);
-                                    switch(doorsStates[i]){
-                                        case "open":
-                                            chartInstance.data.datasets[0].data.push(2);
-                                            break;
-                                        case "closed":
-                                            chartInstance.data.datasets[0].data.push(1);
-                                            break;
-                                        case "error":
-                                            chartInstance.data.datasets[0].data.push(0);
-                                            break;
-                                    }
-                                    chartInstance.update();
-                                }
-                            }
-                        });
-                    }
-                    
-                    break;
-                
                 case "heatpump":
                     const heatPumpInformations = data.value;
-                    waitForElementToBeAvailable("heatpump").then(function() {
+                    waitForElementToBeAvailable("heatpump").then(function () {
                         document.getElementById("heatpump").innerHTML = heatPumpInformations.state;
                         document.getElementById("temperature-heatpump").innerHTML = parseFloat(heatPumpInformations.temp, 10).toFixed(1) + "°C";
                         const cerchio = document.querySelector(".insights .heatpump svg circle");
@@ -180,7 +111,7 @@
                         let chartInstanceState = Chart.getChart("chartHeatPumpState");
                         sample = chartInstanceTemp.data.labels[0];
                         buttonRefresh = document.getElementById("refreshHeatPump");
-                        switch(heatPumpInformations.state){
+                        switch (heatPumpInformations.state) {
                             case "on":
                                 cerchio.style.stroke = "#41f1b6";
                                 buttonRefresh.classList.remove("active");
@@ -194,11 +125,11 @@
                                 buttonRefresh.classList.add("active");
                                 break;
                         }
-                        if(!filtered && sample === undefined){
-                            chartInstanceTemp.data.labels.push(heatPumpInformations.date+"\n"+heatPumpInformations.time);
+                        if (!filtered && sample === undefined) {
+                            chartInstanceTemp.data.labels.push(heatPumpInformations.date + "\n" + heatPumpInformations.time);
                             chartInstanceTemp.data.datasets[0].data.push(heatPumpInformations.temp);
-                            chartInstanceState.data.labels.push(heatPumpInformations.date+"\n"+heatPumpInformations.time);
-                            switch(heatPumpInformations.state){
+                            chartInstanceState.data.labels.push(heatPumpInformations.date + "\n" + heatPumpInformations.time);
+                            switch (heatPumpInformations.state) {
                                 case "on":
                                     chartInstanceState.data.datasets[0].data.push(2);
                                     break;
@@ -212,12 +143,12 @@
                             chartInstanceTemp.update();
                             chartInstanceState.update();
                         }
-                        if(sample !== undefined){
-                            if(date == sample.slice(0, 10)){
-                                chartInstanceTemp.data.labels.push(heatPumpInformations.date+"\n"+heatPumpInformations.time);
+                        if (sample !== undefined) {
+                            if (date == sample.slice(0, 10)) {
+                                chartInstanceTemp.data.labels.push(heatPumpInformations.date + "\n" + heatPumpInformations.time);
                                 chartInstanceTemp.data.datasets[0].data.push(heatPumpInformations.temp);
-                                chartInstanceState.data.labels.push(heatPumpInformations.date+"\n"+heatPumpInformations.time);
-                                switch(heatPumpInformations.state){
+                                chartInstanceState.data.labels.push(heatPumpInformations.date + "\n" + heatPumpInformations.time);
+                                switch (heatPumpInformations.state) {
                                     case "on":
                                         chartInstanceState.data.datasets[0].data.push(2);
                                         break;
@@ -236,78 +167,15 @@
 
                     break;
 
-                case "thermometer":
-                    const thermometerInfo = data.value;
-                    waitForElementToBeAvailable("temperature-room").then(function() {
-                        if(thermometerInfo.temp){
-                            let chartInstance = Chart.getChart("chartThermometer");
-                            document.getElementById("temperature-room").innerHTML = parseFloat(thermometerInfo.temp).toFixed(1) + "°C";
-                            sample = chartInstance.data.labels[0];
-                            if(!filtered && sample === undefined){
-                                chartInstance.data.labels.push(thermometerInfo.date+"\n"+thermometerInfo.time);
-                                chartInstance.data.datasets[0].data.push(thermometerInfo.temp);
-                                chartInstance.update();
-                            }
-                            if(sample !== undefined){
-                                if(date == sample.slice(0, 10)){
-                                    chartInstance.data.labels.push(thermometerInfo.date+"\n"+thermometerInfo.time);
-                                    chartInstance.data.datasets[0].data.push(thermometerInfo.temp);
-                                    chartInstance.update();
-                                }
-                            }
-                        }
-                        else{
-                            document.getElementById("temperature-room").innerHTML = "-- °C";
-                        }
-                    });
-                    break;
             }
         };
     }
 
-    function reconnect(wsUrl){
+    function reconnect(wsUrl) {
         const ws = new WebSocket(wsUrl);
 
         return ws;
     }
-
-    // class WSClient{
-    //     /**
-    //      * Instances a new `WebSocket Client`.
-    //      * @param baseUrl {string?} Optional baseUrl (in questo caso è /ws)
-    //      */
-    //     constructor(baseUrl) {
-    //         this._baseUrl = baseUrl;
-    //     }
-
-    //     async init(){
-    //         const url = document.baseURI.replace(/^http/, 'ws');
-    //         const wsUrl = new URL(this._baseUrl + "/", url);
-    //         //let ws = new WebSocket(wsUrl);
-    //         let ws;
-
-    //         const callbackConnect = () => {
-    //             console.log("CALLBACK");
-    //             ws = new WebSocket(wsUrl);
-    //         };
-
-    //         callbackConnect();
-            
-    //         ws.onopen = function() {
-    //             ws.send(JSON.stringify({"type": "subscribe", "source": "client"}));
-    //         };
-
-	// 		ws.onclose = function() {
-    //             setTimeout(function(){
-    //                 console.info("Connection to the backend closed. Reconnecting...");
-    //                 //init();
-    //                 //ws = new WebSocket(wsUrl);
-    //                 callbackConnect();
-    //               }, 5000);
-    //         }
-    //         routes(ws);
-    //     }
-    // }
 
     class WSClient {
         constructor(baseUrl) {
@@ -315,37 +183,70 @@
             this._ws = null;
             this._isConnected = false;
         }
-    
+
         createWebSocket() {
             const url = document.baseURI.replace(/^http/, 'ws');
             const wsUrl = new URL(this._baseUrl + "/", url);
             this._ws = new WebSocket(wsUrl);
             this._isConnected = true;
-    
+
             this._ws.onopen = () => {
                 console.info("✅ Connected to backend");
-                this._ws.send(JSON.stringify({"type": "subscribe", "source": "client"}));
+                setTimeout(() => {
+                    this.subscribe();
+                }, 3000);       
             };
-    
+
             this._ws.onclose = () => {
                 if (this._isConnected) {
                     console.info("⛔️ Connection to the backend closed. Reconnecting...");
                     this._isConnected = false;
-                    
+
                     setTimeout(() => {
                         this.createWebSocket();
                     }, 5000);
                 }
             };
-    
+
             routes(this._ws);
         }
-    
+
         async init() {
             this.createWebSocket();
         }
+
+        subscribe(){
+            this._ws.send(JSON.stringify({"type": "subscribe", "source": "client"}));
+        }
+
+        getTemperatureObs() {
+            return createFilteredObs("temperature");
+        }
+
+        getThermometerObs() {
+            return createFilteredObs("thermometer");
+        }
+
+        getWindowsObs() {
+            return createFilteredObs("windows");
+        }
+
+        getDoorsObs() {
+            return createFilteredObs("doors");
+        }
+
+        waitForElementToBeAvailable(elementId) {
+            return new Promise(function (resolve) {
+                var checkElementInterval = setInterval(function () {
+                    var element = document.getElementById(elementId);
+                    if (element) {
+                        clearInterval(checkElementInterval);
+                        resolve(element);
+                    }
+                }, 100);
+            });
+        }
     }
-    
 
     win.WSClient ||= WSClient;
 

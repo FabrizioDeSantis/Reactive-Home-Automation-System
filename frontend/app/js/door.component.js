@@ -14,14 +14,17 @@
     #handlers = [];
     /** @type {HTMLElement|null} */
     #edit = null;
+    /** @type {WSClient} */
+    #wsclient;
 
     /**
      * Instances a new `DoorComponent` component.
      * @param model {RestDoorModel} A door model
      */
-    constructor(model) {
+    constructor(model, wsclient) {
       super();
       this.#model = model;
+      this.#wsclient = wsclient;
       this.#element = null;
       this.#handlers = [];
       this.#edit = null;
@@ -40,11 +43,12 @@
      * @return {HTMLElement} The root element for this component.
      */
     init() {
+
       this.#element = document.createElement("div");
       this.#element.className = "temp";
       this.#element.id = "temp";
       this.#element.innerHTML = document.querySelector('script#doors-control-template').textContent;
-        
+
       let element2 = document.createElement("div");
       element2.className = `door${this.#model.id}`;
       element2.id = "door";
@@ -53,13 +57,13 @@
       const h3 = element2.querySelector("#door-header");
       stat.id = `door-${this.#model.id}`;
       h3.innerHTML = `Door ${this.#model.id}`;
-        
+
       let elementChart = document.createElement("div");
       elementChart.className = "chartBox";
       elementChart.innerHTML = document.querySelector('script#doors-chart-template').textContent;
       const span = elementChart.querySelector('#chartDoor');
       span.id = `chartDoor-${this.#model.id}`;
-      
+
       const root = document.querySelector('#insights');
       const rootCharts = document.querySelector('#charts');
 
@@ -88,9 +92,80 @@
 
       return this.#element;
     }
+    
+    // subscribeToDoors() {
+    //   const filterBtn = document.querySelector("#filterDate");
+    //   const doorsObs = this.#wsclient.getDoorsObs();
+    //   doorsObs.subscribe((data) => {
+    //     let filtered = false;
+    //     filterBtn.classList.forEach(name => {
+    //       if (name == "active") {
+    //         filtered = true;
+    //       }
+    //     });
+    //     let date = new Date(Date.now());
+    //     date = date.toISOString();
+    //     date = date.slice(0, 10);
+    //     const dateDoors = data.value[0];
+    //     const doorsIds = data.value[1];
+    //     const doorsStates = data.value[2];
+    //     const index = doorsIds.indexOf(this.#model.id);
+    //     document.getElementById("door-" + this.#model.id).innerHTML = doorsStates[index];
+    //     let buttonRefresh = document.getElementById("refreshDoor " + this.#model.id);
+    //     const cerchio = document.querySelector(".insights .door" + this.#model.id + " svg circle");
+    //     let chartInstance = Chart.getChart("chartDoor-" + this.#model.id);
+    //     let sample = chartInstance.data.labels[0];
+    //     switch (doorsStates[index]) {
+    //       case "open":
+    //         cerchio.style.stroke = "#41f1b6";
+    //         buttonRefresh.classList.remove("active");
+    //         break;
+    //       case "closed":
+    //         cerchio.style.stroke = "#363949";
+    //         buttonRefresh.classList.remove("active");
+    //         break;
+    //       case "error":
+    //         cerchio.style.stroke = "#ff7782";
+    //         buttonRefresh.classList.add("active");
+    //         break;
+    //     }
+    //     if (!filtered && sample === undefined) {
+    //       chartInstance.data.labels.push(dateDoors.date + "\n" + dateDoors.time);
+    //       switch (doorsStates[index]) {
+    //         case "open":
+    //           chartInstance.data.datasets[0].data.push(2);
+    //           break;
+    //         case "closed":
+    //           chartInstance.data.datasets[0].data.push(1);
+    //           break;
+    //         case "error":
+    //           chartInstance.data.datasets[0].data.push(0);
+    //           break;
+    //       }
+    //       chartInstance.update();
+    //     }
+    //     if (sample !== undefined) {
+    //       if (date == sample.slice(0, 10)) {
+    //         chartInstance.data.labels.push(dateDoors.date + "\n" + dateDoors.time);
+    //         switch (doorsStates[index]) {
+    //           case "open":
+    //             chartInstance.data.datasets[0].data.push(2);
+    //             break;
+    //           case "closed":
+    //             chartInstance.data.datasets[0].data.push(1);
+    //             break;
+    //           case "error":
+    //             chartInstance.data.datasets[0].data.push(0);
+    //             break;
+    //         }
+    //         chartInstance.update();
+    //       }
+    //     }
+    //   });
+    // }
 
     createChart() {
-      var yLabels = {0: "error", 1: "closed", 2: "open"};
+      var yLabels = { 0: "error", 1: "closed", 2: "open" };
       const configDoors = {
         type: 'line',
         data: {
@@ -106,28 +181,28 @@
           ]
         },
         options: {
-            responsive: true,
-            aspectRatio: 1,
-            interaction: {
-                intersect: false,
-            },
-            scales: {
-                y: {
-                    display: true,
-                    title: {
-                    display: true,
-                    text: 'Value'
-                    },
-                    suggestedMin: 0,
-                    suggestedMax: 2,
-                    ticks: {
-                        beginAtZero: true,
-                        callback: function(value, index, values) {
-                            return yLabels[value];
-                        }
-                    }
+          responsive: true,
+          aspectRatio: 1,
+          interaction: {
+            intersect: false,
+          },
+          scales: {
+            y: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Value'
+              },
+              suggestedMin: 0,
+              suggestedMax: 2,
+              ticks: {
+                beginAtZero: true,
+                callback: function (value, index, values) {
+                  return yLabels[value];
                 }
+              }
             }
+          }
         }
       };
       return new Chart(
@@ -138,14 +213,14 @@
 
     async filter(chart) {
       console.debug("Attempting to get filtered data graph");
-      try{
+      try {
         const resp = await this.#model.filter();
-        let labels=[];
-        let labels2=[];
-        let values=[];
+        let labels = [];
+        let labels2 = [];
+        let values = [];
         resp.results.forEach(dto => {
-          labels.push(dto.date+"\n"+dto.time);
-          switch(dto.state){
+          labels.push(dto.date + "\n" + dto.time);
+          switch (dto.state) {
             case "open":
               values.push(2);
               break;
@@ -157,34 +232,21 @@
               break;
           }
         });
-        for(let i=0; i< labels.length; i++){
-            labels2.push(labels[i].slice(0, 10));
+        for (let i = 0; i < labels.length; i++) {
+          labels2.push(labels[i].slice(0, 10));
         }
         const startDate = document.getElementById("startDate");
         const endDate = document.getElementById("endDate");
 
-        let indexStart = labels2.indexOf(startDate.value);
-        let indexEnd = labels2.lastIndexOf(endDate.value);
+        const filteredDates = labels2.filter((date, index) => date >= startDate.value && date <= endDate.value);
+        const filteredValues = filteredDates.map((_, index) => values[index]);
+        const filteredDatesVis = filteredDates.map((_, index) => labels[index]);
 
-        if(!(indexStart == -1 && indexEnd == -1)){
-            if(indexStart == -1){
-                indexStart = 0;
-            }
-            if(indexEnd == -1){
-                indexEnd = labels2.length;
-            }
-        }
-
-        const filterDate = labels.slice(indexStart, indexEnd + 1);
-        
-        chart.data.labels = filterDate;
-        
-        const datapoints2 = [...values];
-        const filterDataPoints = datapoints2.slice(indexStart, indexEnd + 1);
-        
-        chart.data.datasets[0].data = filterDataPoints;
+        chart.data.labels = filteredDatesVis;
+        chart.data.datasets[0].data = filteredValues;
         chart.update();
-      }catch(e){
+
+      } catch (e) {
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         section.classList.add("active");
@@ -194,16 +256,16 @@
 
     async open() {
       console.debug("Attempting to open the door");
-      try{
+      try {
         await this.#model.update("open");
-      }catch(e) {
+      } catch (e) {
         console.log(e.status);
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
-        if(e.status == 408){
+        if (e.status == 408) {
           errorMessage.innerHTML = "Request timed out: door service is down.";
         }
-        else{
+        else {
           errorMessage.innerHTML = "Door already open or is in error.";
         }
         section.classList.add("active");
@@ -212,16 +274,16 @@
 
     async close() {
       console.debug("Attempting to close the door");
-      try{
+      try {
         await this.#model.update("closed");
-      }catch(e) {
+      } catch (e) {
         console.log(e.status);
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
-        if(e.status == 408){
+        if (e.status == 408) {
           errorMessage.innerHTML = "Request timed out: door service is down.";
         }
-        else{
+        else {
           errorMessage.innerHTML = "Door already closed or is in error.";
         }
         section.classList.add("active");
@@ -230,16 +292,16 @@
 
     async restart() {
       console.debug("Attempting to restart the door");
-      try{
+      try {
         await this.#model.update("restart");
-      }catch(e) {
+      } catch (e) {
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         section.classList.add("active");
-        if(e.status == 408){
+        if (e.status == 408) {
           errorMessage.innerHTML = "Request timed out: door service is down.";
         }
-        else{
+        else {
           errorMessage.innerHTML = "Unable to restart door sensor.";
         }
         section.classList.add("active");
@@ -248,16 +310,16 @@
 
     async newDoor() {
       console.debug("Attempting to create new door");
-      try{
+      try {
         await this.#model.create();
-      }catch(e){
+      } catch (e) {
         const section = document.querySelector("section");
         const errorMessage = document.querySelector("#error-message");
         section.classList.add("active");
-        if(e.status == 408){
+        if (e.status == 408) {
           errorMessage.innerHTML = "Request timed out: door service is down.";
         }
-        else{
+        else {
           errorMessage.innerHTML = "Unable to add new door sensor.";
         }
         section.classList.add("active");
