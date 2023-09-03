@@ -337,7 +337,7 @@ export function routes(app, wss, oidc, config) {
                 }
 
                 services.set("doors", doors);
-                combinedInfo = [resultDate, doorsStates];
+                combinedInfo = [resultDate, doorsIds, doorsStates];
                 stateAndDatesDoors.push(combinedInfo);
 
                 for (let [keyWS, value] of clients) {

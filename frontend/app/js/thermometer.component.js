@@ -14,14 +14,17 @@
     #handlers = [];
     /** @type {HTMLElement|null} */
     #edit = null;
+    /** @type {WSClient} */
+    #wsclient;
 
     /**
      * Instances a new `ThermometerComponent` component.
      * @param model {RestDoorModel} A door model
      */
-    constructor(model) {
+    constructor(model, wsclient) {
       super();
       this.#model = model;
+      this.#wsclient = wsclient;
       this.#element = null;
       this.#handlers = [];
       this.#edit = null;
@@ -59,7 +62,45 @@
         let hdlrFilter = new Handler('click', filterBtn, () => this.filter(chart));
         this.#handlers.push(hdlrFilter);
 
+        this.subscribeToThermometer(filterBtn);
+
         return this.#element;
+    }
+
+    subscribeToThermometer(filterBtn){
+      const thermometerObs = this.#wsclient.getThermometerObs();
+      thermometerObs.subscribe((data) => {
+        let filtered = false;
+        filterBtn.classList.forEach(name => {
+          if(name == "active"){
+            filtered = true;
+          }
+        });
+        let date = new Date(Date.now());
+        date = date.toISOString();
+        date = date.slice(0, 10);;
+        const thermometerInfo = data.value;
+        if(thermometerInfo !== undefined){
+          let chartInstance = Chart.getChart("chartThermometer");
+          document.getElementById("temperature-room").innerHTML = parseFloat(thermometerInfo.temp).toFixed(1) + "°C";
+          let sample = chartInstance.data.labels[0];
+          if(!filtered && sample === undefined){
+            chartInstance.data.labels.push(thermometerInfo.date+"\n"+thermometerInfo.time);
+            chartInstance.data.datasets[0].data.push(thermometerInfo.temp);
+            chartInstance.update();
+          }
+          if(sample !== undefined){
+              if(date == sample.slice(0, 10)){
+                chartInstance.data.labels.push(thermometerInfo.date+"\n"+thermometerInfo.time);
+                chartInstance.data.datasets[0].data.push(thermometerInfo.temp);
+                chartInstance.update();
+              }
+          }
+        }
+        else{
+          document.getElementById("temperature-room").innerHTML = "-- °C";
+        }
+      });
     }
 
     createChart() {

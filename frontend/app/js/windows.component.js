@@ -16,14 +16,16 @@
     class WindowsComponent {
       #element = null;
       #client = null;
+      #wsclient = null;
       #windows = [];
   
       /**
        * Instances this component.
        * @param client {RestClient} A REST client
        */
-      constructor(client) {
+      constructor(client, wsclient) {
         this.#client = client;
+        this.#wsclient = wsclient;
       }
   
       /**
@@ -61,7 +63,7 @@
 
       createWindowComponent(model) {
         const root = this.#element;
-        const component = new WindowComponent(model);
+        const component = new WindowComponent(model, this.#wsclient);
         this.#windows.push({model, component});
         const el = component.init();
         root.appendChild(el);

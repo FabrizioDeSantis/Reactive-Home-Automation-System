@@ -14,14 +14,17 @@
     #handlers = [];
     /** @type {HTMLElement|null} */
     #edit = null;
+    /** @type {WSClient} */
+    #wsclient;
 
     /**
      * Instances a new `WeatherComponent` component.
      * @param model {RestDoorModel} A door model
      */
-    constructor(model) {
+    constructor(model, wsclient) {
       super();
       this.#model = model;
+      this.#wsclient = wsclient;
       this.#element = null;
       this.#handlers = [];
       this.#edit = null;
@@ -61,7 +64,40 @@
         let hdlrFilter = new Handler('click', filterBtn, () => this.filter(chart));
         this.#handlers.push(hdlrFilter);
 
+        this.subscribeToTemperature(filterBtn);
+
         return this.#element;
+    }
+
+    subscribeToTemperature(filterBtn){
+      const tempObs = this.#wsclient.getTemperatureObs();
+      tempObs.subscribe((data) => {
+        let filtered = false;
+        filterBtn.classList.forEach(name => {
+          if(name == "active"){
+            filtered = true;
+          }
+        });
+        let date = new Date(Date.now());
+        date = date.toISOString();
+        date = date.slice(0, 10);;
+        const weatherInfo = data.value;
+        document.getElementById("temperature-weather").innerHTML = parseFloat(weatherInfo.temp, 10).toFixed(1) + "°C";
+        let chartInstance = Chart.getChart("chartWeather");
+        let sample = chartInstance.data.labels[0];
+        if(!filtered && sample === undefined){
+          chartInstance.data.labels.push(weatherInfo.date+"\n"+weatherInfo.time);
+          chartInstance.data.datasets[0].data.push(weatherInfo.temp);
+          chartInstance.update();
+        }
+        if(sample !== undefined){
+          if(date == sample.slice(0, 10)){
+            chartInstance.data.labels.push(weatherInfo.date+"\n"+weatherInfo.time);
+            chartInstance.data.datasets[0].data.push(weatherInfo.temp);
+            chartInstance.update();
+          }
+        }
+      });
     }
 
     createChart() {

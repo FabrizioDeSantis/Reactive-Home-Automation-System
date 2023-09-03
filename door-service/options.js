@@ -13,7 +13,8 @@ const IFACE = '0.0.0.0';
 const PORT = 8083;
 const ERROR_PROB = 0.2;
 const DELAY_PROB = 0;
-const DOWN_PROB = 0.2;
+// const DOWN_PROB = 0.2;
+const DOWN_PROB = 0;
 const FREQ_MS = 5000;
 const TTL_SEC = 60;
 

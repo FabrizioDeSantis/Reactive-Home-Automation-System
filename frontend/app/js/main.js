@@ -24,8 +24,8 @@
     if (token) {
       //document.body.classList.toggle("enable-theme-var");
       await wsclient.init();
-      comp_window = new WindowsComponent(client);
-      comp_door = new DoorsComponent(client);
+      comp_window = new WindowsComponent(client, wsclient);
+      comp_door = new DoorsComponent(client, wsclient);
       comp_pump = new HeatPumpsComponent(client);
       if (subscription) {
         subscription.unsubscribe();
@@ -35,24 +35,29 @@
 
       /** Definition weather component */
       const modelWeather = new RestWeatherModel(client);
-      comp_weather = new WeatherComponent(modelWeather);
+      comp_weather = new WeatherComponent(modelWeather, wsclient);
       elem_weather = await comp_weather.init();
       components.push(comp_weather);
       
       /** Definition thermometer component */
       const modelThermometer = new RestThermometerModel(client);
-      comp_thermometer = new ThermometerComponent(modelThermometer);
+      comp_thermometer = new ThermometerComponent(modelThermometer, wsclient);
       elem_thermometer = await comp_thermometer.init();
       components.push(comp_thermometer);
+
       elem_pump = await comp_pump.init();
       elem_window = await comp_window.init();
       elem_door = await comp_door.init();
+
       await rootPump.appendChild(elem_pump);
       await rootDoor.appendChild(elem_door);
       await root.appendChild(elem_window);
       components.push(comp_pump);
       components.push(comp_door);
       components.push(comp_window);
+
+      wsclient.subscribe();
+
     } else {
       // initializes the login panel
       //document.body.classList.toggle("disable-theme-var");

@@ -88,6 +88,10 @@
         return this.#element;
     }
 
+    subscribeToHeatPump(){
+      
+    }
+
     createChartTemperature(){
       const configHeatPump = {
         type: 'line',
