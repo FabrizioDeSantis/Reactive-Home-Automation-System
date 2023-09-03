@@ -14,14 +14,16 @@
     #handlers = [];
     /** @type {HTMLElement|null} */
     #edit = null;
+    #wsclient;
 
     /**
      * Instances a new `HeatPumpComponent` component.
      * @param model {RestHeatPumpModel} A heatpump model
      */
-    constructor(model) {
+    constructor(model, wsclient) {
       super();
       this.#model = model;
+      this.#wsclient = wsclient;
       this.#element = null;
       this.#handlers = [];
       this.#edit = null;
@@ -40,6 +42,9 @@
      * @return {HTMLElement} The root element for this component.
      */
     init() {
+
+        this.subscribeToHeatPump();
+
         this.#element = document.createElement("div");
         this.#element.className = "temp";
         this.#element.id = "temp";
@@ -88,8 +93,94 @@
         return this.#element;
     }
 
+    waitForElementToBeAvailable(elementId) {
+      return new Promise(function (resolve) {
+          var checkElementInterval = setInterval(function () {
+              var elemento = document.getElementById(elementId);
+              if (elemento) {
+                  clearInterval(checkElementInterval);
+                  resolve(elemento);
+              }
+          }, 100);
+      });
+    }
+
     subscribeToHeatPump(){
-      
+      const heatPumpObs = this.#wsclient.getHeatPumpObs();
+      const filterBtn = document.querySelector("#filterDate");
+      heatPumpObs.subscribe((data) => {
+        let filtered = false;
+        filterBtn.classList.forEach(name => {
+          if (name == "active") {
+            filtered = true;
+          }
+        });
+        let date = new Date(Date.now());
+        date = date.toISOString();
+        date = date.slice(0, 10);
+        const heatPumpInformations = data.value;
+        this.waitForElementToBeAvailable("heatpump").then(function () {
+            document.getElementById("heatpump").innerHTML = heatPumpInformations.state;
+            document.getElementById("temperature-heatpump").innerHTML = parseFloat(heatPumpInformations.temp, 10).toFixed(1) + "°C";
+            const cerchio = document.querySelector(".insights .heatpump svg circle");
+            let chartInstanceTemp = Chart.getChart("chartHeatPump");
+            let chartInstanceState = Chart.getChart("chartHeatPumpState");
+            let sample = chartInstanceTemp.data.labels[0];
+            let buttonRefresh = document.getElementById("refreshHeatPump");
+            switch (heatPumpInformations.state) {
+                case "on":
+                    cerchio.style.stroke = "#41f1b6";
+                    buttonRefresh.classList.remove("active");
+                    break;
+                case "off":
+                    cerchio.style.stroke = "#363949";
+                    buttonRefresh.classList.remove("active");
+                    break;
+                case "error":
+                    cerchio.style.stroke = "#ff7782";
+                    buttonRefresh.classList.add("active");
+                    break;
+            }
+            if (!filtered && sample === undefined) {
+                chartInstanceTemp.data.labels.push(heatPumpInformations.date + "\n" + heatPumpInformations.time);
+                chartInstanceTemp.data.datasets[0].data.push(heatPumpInformations.temp);
+                chartInstanceState.data.labels.push(heatPumpInformations.date + "\n" + heatPumpInformations.time);
+                switch (heatPumpInformations.state) {
+                    case "on":
+                        chartInstanceState.data.datasets[0].data.push(2);
+                        break;
+                    case "off":
+                        chartInstanceState.data.datasets[0].data.push(1);
+                        break;
+                    case "error":
+                        chartInstanceState.data.datasets[0].data.push(0);
+                        break;
+                }
+                chartInstanceTemp.update();
+                chartInstanceState.update();
+            }
+            if (sample !== undefined) {
+                if (date == sample.slice(0, 10)) {
+                    chartInstanceTemp.data.labels.push(heatPumpInformations.date + "\n" + heatPumpInformations.time);
+                    chartInstanceTemp.data.datasets[0].data.push(heatPumpInformations.temp);
+                    chartInstanceState.data.labels.push(heatPumpInformations.date + "\n" + heatPumpInformations.time);
+                    switch (heatPumpInformations.state) {
+                        case "on":
+                            chartInstanceState.data.datasets[0].data.push(2);
+                            break;
+                        case "off":
+                            chartInstanceState.data.datasets[0].data.push(1);
+                            break;
+                        case "error":
+                            chartInstanceState.data.datasets[0].data.push(0);
+                            break;
+                    }
+                    chartInstanceTemp.update();
+                    chartInstanceState.update();
+                }
+            }
+        });
+      });
     }
 
     createChartTemperature(){

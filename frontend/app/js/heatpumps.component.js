@@ -16,14 +16,16 @@
     class HeatPumpsComponent {
       #element = null;
       #client = null;
+      #wsclient = null;
       #heatpumps = [];
   
       /**
        * Instances this component.
        * @param client {RestClient} A REST client
        */
-      constructor(client) {
+      constructor(client, wsclient) {
         this.#client = client;
+        this.#wsclient = wsclient;
       }
   
       /**
@@ -54,7 +56,7 @@
   
       createHeatPumpComponent(model) {
         const root = this.#element;
-        const component = new HeatPumpComponent(model);
+        const component = new HeatPumpComponent(model, this.#wsclient);
         this.#heatpumps.push({model, component});
         const el = component.init();
         root.appendChild(el);

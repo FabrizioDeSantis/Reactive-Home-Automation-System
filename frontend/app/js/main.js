@@ -26,7 +26,7 @@
       await wsclient.init();
       comp_window = new WindowsComponent(client, wsclient);
       comp_door = new DoorsComponent(client, wsclient);
-      comp_pump = new HeatPumpsComponent(client);
+      comp_pump = new HeatPumpsComponent(client, wsclient);
       if (subscription) {
         subscription.unsubscribe();
       }
