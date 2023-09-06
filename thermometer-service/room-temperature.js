@@ -20,7 +20,9 @@ function computeRoomTemperature(externalTemperature, windowsStates, doorsStates,
     const incrMultiplier = 0.01;
 
     if(heatPumpState != undefined){
-        temperatureOp = heatPumpState._temperatureOp;
+        if(heatPumpState._state !== "error"){
+            temperatureOp = heatPumpState._temperatureOp;
+        }
     }
     if(externalTemperature == null){
         externalTemperature = 0;
