@@ -27,6 +27,7 @@ services:
     networks:
       app-network:
         ipv4_address: "10.88.0.31"
+    hostname: weather-service
   # Window
   window:
     build: ./window-service
@@ -62,6 +63,7 @@ services:
     networks:
       app-network:
         ipv4_address: "10.88.0.71"
+    hostname: thermometer-service
   # Actuator
   actuator:
     build: ./actuator
