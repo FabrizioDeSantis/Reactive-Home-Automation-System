@@ -27,7 +27,7 @@ export class HeatPump {
   //@formatter:on
 }
 
-const heatPump = new HeatPump("error", 30);
+const heatPump = new HeatPump("off", 0);
 const error_prob = 0.05;
 let handler = null;
 

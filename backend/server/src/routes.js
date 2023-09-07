@@ -310,15 +310,17 @@ export function routes(app, wss, oidc, config) {
             case "doors":
                 const doorsStates = data.states.map((door) => door.state);
                 const doorsIds = data.states.map((door) => door.doorId);
+                const numDoors = doorsStates.length - doors.length;
 
                 resultDate = retrieveDate(data.dateTime);
 
                 console.info("New states received from the doors microservice: " + doorsStates);
+                console.info("Doors: " + doors);
                 console.info("Combined time: " + resultDate.time);
                 console.info("Combined date: " + resultDate.date);
 
                 if(doors.length != doorsStates.length){
-                    for (let i = 0; i < (doorsStates.length - doors.length); i++) {
+                    for (let i = 0; i < numDoors; i++) {
                         doors.push(new Door(null, null));
                     }
                 }

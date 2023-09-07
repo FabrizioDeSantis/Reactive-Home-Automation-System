@@ -2,6 +2,17 @@
 
 import fetch from 'node-fetch';
 
+function isInteger(n) {
+  n = n.trim();
+
+  if(n == ""){
+    return false;
+  }
+
+  const integerPattern = /^-?\d+$/;
+  return integerPattern.test(n);
+}
+
 async function makeRequest(type, url, data, timeout) {
   try{
     const fetchPromise = fetch(url, {
@@ -126,6 +137,14 @@ export function routes(app, config) {
     let {state, temperatureOp} = req.body;
 
     console.debug('Attempting to update heatpump operation temperature to ', {temperatureOp});
+
+    console.log("type: " + typeof(temperatureOp));
+
+    if (!isInteger(temperatureOp)){
+      resp.status(400);
+      resp.json({error: "The temperature value is not an integer"});
+      return;
+    }
 
     if(state === "off" || state === "error") {
       resp.status(400);

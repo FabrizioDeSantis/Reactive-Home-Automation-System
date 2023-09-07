@@ -370,7 +370,7 @@
           errorMessage.innerHTML = "Request timed out: heat pump service is down.";
         }
         else{
-          errorMessage.innerHTML = "Heat pump off, heat pump in error or temperature out of range (0-60°C).";
+          errorMessage.innerHTML = "Heat pump off, heat pump in error or temperature out of range (0-60°C).";    
         }
         section.classList.add("active");
       }

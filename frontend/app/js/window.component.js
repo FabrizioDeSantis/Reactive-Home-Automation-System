@@ -89,8 +89,6 @@
         let hdlrFilter = new Handler('click', filterBtn, () => this.filter(chart));
         this.#handlers.push(hdlrFilter);
 
-        this.subscribeToWindows(filterBtn, refreshBtn);
-
         return this.#element;
     }
 
@@ -104,77 +102,6 @@
               }
           }, 100);
      });
-    }
-
-    subscribeToWindows(filterBtn, buttonRefresh){
-      const windowsObs = this.#wsclient.getWindowsObs();
-      windowsObs.subscribe((data) => {
-        let filtered = false;
-        filterBtn.classList.forEach(name => {
-          if(name == "active"){
-            filtered = true;
-          }
-        });
-        let date = new Date(Date.now());
-        date = date.toISOString();
-        date = date.slice(0, 10);
-        const windowsDate = data.value[0];
-        const windowsId = data.value[1];
-        const windowsStates = data.value[2];
-        const index = windowsId.indexOf(this.#model.id);
-        console.log(index);
-        document.getElementById("window-" + this.#model.id).innerHTML = windowsStates[index];
-        buttonRefresh = document.getElementById("refreshWindow " + this.#model.id);
-        const cerchio = document.querySelector(".insights .window" + this.#model.id + " svg circle");
-        let chartInstance = Chart.getChart("chartWindow-" + this.#model.id);
-        let sample = chartInstance.data.labels[0];
-        switch(windowsStates[index]){
-          case "open":
-            cerchio.style.stroke = "#41f1b6";
-            buttonRefresh.classList.remove("active");
-            break;
-          case "closed":
-            cerchio.style.stroke = "#363949";
-            buttonRefresh.classList.remove("active");
-            break;
-          case "error":
-            cerchio.style.stroke = "#ff7782";
-            buttonRefresh.classList.add("active");
-            break;
-        }
-        if(!filtered && sample === undefined){
-          chartInstance.data.labels.push(windowsDate.date+"\n"+windowsDate.time);
-          switch(windowsStates[index]){
-            case "open":
-              chartInstance.data.datasets[0].data.push(2);
-              break;
-            case "closed":
-              chartInstance.data.datasets[0].data.push(1);
-              break;
-            case "error":
-              chartInstance.data.datasets[0].data.push(0);
-              break;
-          }
-          chartInstance.update();
-        }
-        if(sample !== undefined){
-          if(date == sample.slice(0, 10)){
-            chartInstance.data.labels.push(windowsDate.date+"\n"+windowsDate.time);
-            switch(windowsStates[index]){
-                case "open":
-                  chartInstance.data.datasets[0].data.push(2);
-                  break;
-                case "closed":
-                  chartInstance.data.datasets[0].data.push(1);
-                  break;
-                case "error":
-                  chartInstance.data.datasets[0].data.push(0);
-                  break;
-            }
-            chartInstance.update();
-          }
-        }
-      });
     }
 
     createChart() {

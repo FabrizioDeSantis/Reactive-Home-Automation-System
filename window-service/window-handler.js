@@ -190,7 +190,8 @@ export class WindowHandler extends EventEmitter {
 
     const callbackDownTime = () => {
       this._simulateDowntime();
-      setTimeout(callbackDownTime, 2.0 * this._someMillis());
+      // setTimeout(callbackDownTime, 2.0 * this._someMillis());
+      setTimeout(callbackDownTime, 5000);
     };
     setTimeout(callbackDownTime, 0);
   }
