@@ -5,18 +5,6 @@
     const { Subject, filter } = rxjs;
     const dataSubject = new Subject();
 
-    function waitForElementToBeAvailable(elementId) {
-        return new Promise(function (resolve) {
-            var checkElementInterval = setInterval(function () {
-                var elemento = document.getElementById(elementId);
-                if (elemento) {
-                    clearInterval(checkElementInterval);
-                    resolve(elemento);
-                }
-            }, 100);
-        });
-    }
-
     function createFilteredObs(dataType) {
         return dataSubject.pipe(
             filter((data) => data.type === dataType)
@@ -53,7 +41,7 @@
                 console.info("✅ Connected to backend");
                 setTimeout(() => {
                     this.subscribe();
-                }, 3000);       
+                }, 2000);       
             };
 
             this._ws.onclose = () => {

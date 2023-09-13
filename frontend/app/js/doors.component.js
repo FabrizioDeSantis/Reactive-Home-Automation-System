@@ -70,11 +70,23 @@
 
       async addDoor() {
         console.log("Adding new door ...");
-        console.log(this.#doors.length);
         const model = new RestDoorModel(undefined, "closed", this.#client);
-        await model.create();
-        console.log("Door successfully saved", {model: model.toDto()});
-        this.createDoorComponent(model);
+        try {
+          await model.create();
+          console.log("Door successfully saved", {model: model.toDto()});
+          this.createDoorComponent(model);
+        } catch (e) {
+          const section = document.querySelector("section");
+          const errorMessage = document.querySelector("#error-message");
+          section.classList.add("active");
+          if (e.status == 408) {
+            errorMessage.innerHTML = "Request timed out: door service is down.";
+          }
+          else {
+            errorMessage.innerHTML = "Unable to add new door sensor.";
+          }
+          section.classList.add("active");
+        }
       }
 
       waitForElementToBeAvailable(elementId) {

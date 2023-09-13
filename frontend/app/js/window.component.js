@@ -245,23 +245,22 @@
       }
     }
 
-    async newWindow() {
-      console.debug("Attempting to create new window");
-      try{
-        await this.#model.create();
-      }catch(e){
-        const section = document.querySelector("section");
-        const errorMessage = document.querySelector("#error-message");
-        section.classList.add("active");
-        if(e.status == 408){
-          errorMessage.innerHTML = "Request timed out: window service is down.";
-        }
-        else{
-          errorMessage.innerHTML = "Unable to add new window sensor.";
-        }
-        section.classList.add("active");
-      }
-    }
+    // async newWindow() {
+    //   console.debug("Attempting to create new window");
+    //   try{
+    //     await this.#model.create();
+    //   }catch(e){
+    //     const section = document.querySelector("section");
+    //     const errorMessage = document.querySelector("#error-message");
+    //     if(e.status == 408){
+    //       errorMessage.innerHTML = "Request timed out: window service is down.";
+    //     }
+    //     else{
+    //       errorMessage.innerHTML = "Unable to add new window sensor.";
+    //     }
+    //     section.classList.add("active");
+    //   }
+    // }
   }
 
   /* Exporting component */

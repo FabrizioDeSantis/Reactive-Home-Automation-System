@@ -160,9 +160,21 @@
         console.log("Adding new window ...");
         console.log(this.#windows.length);
         const model = new RestWindowModel(undefined, "closed", this.#client);
-        await model.create();
-        console.log("Window successfully saved", {model: model.toDto()});
-        this.createWindowComponent(model);
+        try{
+          await model.create();
+          console.log("Window successfully saved", {model: model.toDto()});
+          this.createWindowComponent(model);
+        }catch(e){
+          const section = document.querySelector("section");
+          const errorMessage = document.querySelector("#error-message");
+          if(e.status == 408){
+            errorMessage.innerHTML = "Request timed out: window service is down.";
+          }
+          else{
+            errorMessage.innerHTML = "Unable to add new window sensor.";
+          }
+          section.classList.add("active");
+        }
       }
     }
   

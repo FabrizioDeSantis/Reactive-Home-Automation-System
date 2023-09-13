@@ -56,7 +56,7 @@
       components.push(comp_door);
       components.push(comp_window);
 
-      wsclient.subscribe();
+      // wsclient.subscribe();
 
     } else {
       // initializes the login panel

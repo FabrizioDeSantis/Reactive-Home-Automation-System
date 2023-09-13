@@ -48,7 +48,7 @@
           const model = new RestHeatPumpModel(resp.state, resp.temperatureOp, this.#client);
           this.createHeatPumpComponent(model);
         } catch (e) {
-          console.error('Something went wrong getting heatpump', e);
+          console.error('Something went wrong getting heatpump informations', e);
         }
   
         return this.#element;

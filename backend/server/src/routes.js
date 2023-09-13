@@ -183,6 +183,7 @@ function sendAllData(){
  * @param {{iface: string, port: number, auth: boolean, oidc: {redirect: string, clientId: string, secret: string}}} config Configuration options
  */
 export function routes(app, wss, oidc, config) {
+    
     const authenticate = config.auth ? (req, res, next) => oidc.validate(req, res, next) : (_req, _res, next) => next();
 
     wss.on('connection', (ws) => {
@@ -410,6 +411,10 @@ export function routes(app, wss, oidc, config) {
         } catch (error) {
           console.error('Error during processing of the message:', error);
         }
+      });
+      ws.on("close", () => {
+        console.log("Client disconnected");
+        clients.delete(ws);
       });
     });
 
